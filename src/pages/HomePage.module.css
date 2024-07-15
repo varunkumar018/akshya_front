@@ -1,0 +1,64 @@
+.unitHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  margin-top: 20px;
+}
+
+.unitHeader h2 {
+  margin: 15px;
+}
+
+.unitHeader .addButton {
+  padding: 8px 15px;
+  font-size: 14px;
+  cursor: pointer;
+  border-radius: 5px;
+  border: none; /* Remove default border */
+  background-color: #007bff; /* Primary color */
+  color: white; /* Text color */
+  transition: background-color 0.3s, transform 0.3s; /* Smooth transitions */
+  margin-right: 30px;
+}
+
+.unitHeader .addButton:hover {
+  background-color: #0056b3; /* Darker shade on hover */
+  transform: scale(1.05); /* Slightly enlarge on hover */
+}
+
+.unitHeader .addButton:active {
+  background-color: #004494; /* Even darker shade on click */
+  transform: scale(0.98); /* Slightly shrink on click */
+}
+
+.gridContainer {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.buttonContainer {
+  display: flex;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.addButtonModal {
+  background-color: black;
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.3s; /* Smooth transitions */
+}
+
+.addButtonModal:hover {
+  background-color: #333;
+  transform: scale(1.05);
+}
+
+.addButtonModal:active {
+  background-color: #111;
+  transform: scale(0.98);
+}

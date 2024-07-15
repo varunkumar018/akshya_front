@@ -1,0 +1,26 @@
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    width: 100%; /* Ensure the header spans the full width */
+    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+    border-radius: 5px;
+    
+  }
+  
+  .profile {
+    display: flex;
+    align-items: center;
+    margin-left: auto; /* Push the profile to the right */
+  }
+
+
+  .gridContainer {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  } 
+
+
+  
