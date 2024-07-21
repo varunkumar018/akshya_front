@@ -16,9 +16,10 @@ import { useState } from 'react';
 import styles from './HomePage.module.css';
 import classes from './TableScrollArea.module.css';
 import { Link } from 'react-router-dom';
+import { IconEdit, IconEye, IconTrash } from '@tabler/icons-react';
 
 const items = [
-  { title: 'HomePage', href: '/' },
+  { title: 'HomePage', href: '/homepage' },
   { title: 'Power Plant', href: '#' },
 ].map((item, index) => (
   <Link to={item.href} key={index}>
@@ -53,12 +54,44 @@ export function PowerPlant() {
     close();
   };
 
+  const handleView = (data) => {
+    setSelectedData(data);
+    openView();
+  };
+
+  const handleEdit = (id) => {
+    console.log('Edit', id);
+  };
+
+  const handleDelete = (id) => {
+    console.log('Delete', id);
+  };
+
   const rows = elements.map((element) => (
     <Table.Tr key={element.name}>
       <Table.Td>{element.position}</Table.Td>
       <Table.Td>{element.name}</Table.Td>
       <Table.Td>{element.symbol}</Table.Td>
       <Table.Td>{element.mass}</Table.Td>
+      <Table.Td>
+        <Group spacing="xs">
+          <IconEye
+            size={20}
+            onClick={() => handleView(element.name)}
+            style={{ cursor: 'pointer' }}
+          />
+          <IconEdit
+            size={20}
+            onClick={() => handleEdit(element.name)}
+            style={{ cursor: 'pointer' }}
+          />
+          <IconTrash
+            size={20}
+            onClick={() => handleDelete(element.name)}
+            style={{ cursor: 'pointer' }}
+          />
+        </Group>
+      </Table.Td>
     </Table.Tr>
   ));
 
@@ -164,3 +197,11 @@ export function PowerPlant() {
     </AppShell>
   );
 }
+function openView() {
+  throw new Error('Function not implemented.');
+}
+
+function setSelectedData(data: any) {
+  throw new Error('Function not implemented.');
+}
+

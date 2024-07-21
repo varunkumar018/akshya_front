@@ -8,7 +8,7 @@ export function Header() {
     <div className={classes.header}>
       <Title order={4} size={32} ml={20}>AKSHYA</Title>
       <div className={classes.profile}>
-        <Group spacing="xs">
+        <Group >
           <Avatar color="blue" radius="xl">
             <IconUser size={24} />
           </Avatar>

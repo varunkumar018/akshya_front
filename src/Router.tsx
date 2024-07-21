@@ -5,11 +5,18 @@ import { Units } from './pages/Units';
 import { Resource } from './pages/resources';
 import { PowerPlant } from './pages/PowerPlant';
 import { Maintenance } from './pages/Maintenance';
+import { Staff } from './pages/staff';
+import { Inspection } from './pages/Inspection';
+import { Login } from './components/login/login';
 
 
 const router = createBrowserRouter([
   {
     path: '/',
+    element: <Login />,
+  },
+  {
+    path: '/homepage',
     element: <HomePage />,
   },
   {
@@ -31,6 +38,14 @@ const router = createBrowserRouter([
   {
     path: '/maintenance',
     element: <Maintenance />,
+  },
+  {
+    path: '/staff',
+    element: <Staff />,
+  },
+  {
+    path: '/inspection',
+    element: <Inspection />,
   },
 ]);
 

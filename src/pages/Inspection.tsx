@@ -22,7 +22,7 @@ import { IconEdit, IconEye, IconTrash } from '@tabler/icons-react';
 
 const items = [
   { title: 'HomePage', href: '/homepage' },
-  { title: 'Maintenance', href: '#' },
+  { title: 'Inspection', href: '#' },
 ].map((item, index) => (
   <Link to={item.href} key={index}>
     {item.title}
@@ -44,14 +44,11 @@ const ViewModal = ({ opened, onClose, data }) => (
       <div><strong>Unit:</strong> {data.unit}</div>
       <div><strong>Date:</strong> {data.date}</div>
       <div><strong>Status:</strong> <span style={{ color: data.statusColor }}>{data.status}</span></div>
-      <div><strong>Maintenance type:</strong> {data.type}</div>
-      <div><strong>Description:</strong> {data.description}</div>
-      <div><strong>Assigned To:</strong></div>
-      <div>Name: {data.assignedTo?.name ?? 'N/A'}</div>
-      <div>Department: {data.assignedTo?.department ?? 'N/A'}</div>
-      <div>Place: {data.assignedTo?.place ?? 'N/A'}</div>
+      <div><strong>Inspection Details:</strong> {data.inspectionDetails}</div>
+      <div><strong>Comments:</strong></div>
+      <Textarea value={data.comments} onChange={(event) => data.setComments(event.currentTarget.value)} />
       <div><strong>Completed date:</strong> {data.completedDate}</div>
-      <div><strong>Comments:</strong> {data.comments}</div>
+      <div><strong>Inspected By:</strong> {data.inspectedBy}</div>
       <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
         <Button>Generate Report</Button>
       </div>
@@ -88,7 +85,7 @@ const AssignModal = ({ opened, onClose, data, onAssign }) => (
   </Modal>
 );
 
-export function Maintenance() {
+export function Inspection() {
   const [opened, { toggle }] = useDisclosure();
   const [scrolled, setScrolled] = useState(false);
   const [modalOpened, { open, close }] = useDisclosure(false);
@@ -137,12 +134,11 @@ export function Maintenance() {
   const rows = elements.map((element) => (
     <Table.Tr key={element.name}>
       <Table.Td>{element.position}</Table.Td>
-      <Table.Td>{element.name}</Table.Td>
       <Table.Td>{element.symbol}</Table.Td>
-      <Table.Td><Button className={styles.button} onClick={openAssign} >Assign to</Button></Table.Td>
+      <Table.Td><Button className={styles.button} onClick={openAssign}>Assign to</Button></Table.Td>
       <Table.Td>{element.status}</Table.Td>
       <Table.Td>
-        <Group>
+        <Group >
           <IconEye
             size={20}
             onClick={() =>
@@ -151,11 +147,16 @@ export function Maintenance() {
                 date: 'DD/MM/YYYY',
                 status: 'Started',
                 statusColor: 'blue',
-                type: 'Type name',
-                description: 'Join us for an elegant evening of dining and entertainment...',
-                assignedTo: { name: 'John Doe', department: 'Maintenance', place: 'Building 1' },
                 completedDate: 'DD/MM/YYYY',
-                comments: 'From the Worker',
+                inspectionDetails: 'Details of the inspection...',
+                comments: '',
+                setComments: (comments) => {
+                  setSelectedData((prevData) => ({
+                    ...prevData,
+                    comments,
+                  }));
+                },
+                inspectedBy: 'Person Details',
               })
             }
             style={{ cursor: 'pointer' }}
@@ -193,7 +194,7 @@ export function Maintenance() {
       <AppShell.Main>
         <Breadcrumbs ml={15}>{items}</Breadcrumbs>
         <div className={styles.unitHeader}>
-          <h2>Maintenance</h2>
+          <h2>Inspection</h2>
 
           <Modal
             opened={modalOpened}
@@ -213,27 +214,12 @@ export function Maintenance() {
                 onChange={setResourceName}
                 mb="sm"
               />
-              <Select
-                label="Type"
-                placeholder="Select Type"
-                data={['Type A', 'Type B', 'Type C']} // Replace with your types
-                value={Type}
-                onChange={setType}
-                mb="sm"
-              />
               <TextInput
-                label="Date"
+                label="Inspection Date"
                 type="date"
                 placeholder="Pick a date"
                 value={DateValue}
                 onChange={setDateValue}
-                mb="sm"
-              />
-              <TextInput
-                label="Record Specification"
-                placeholder="Record Specification"
-                value={UnitID}
-                onChange={(event) => setUnitID(event.currentTarget.value)}
                 mb="sm"
               />
             </div>
@@ -246,21 +232,21 @@ export function Maintenance() {
           </Modal>
 
           <button className={styles.addButton} onClick={open}>
-            Add Maintenance
+            Add Inspection
           </button>
         </div>
-        <Table stickyHeader stickyHeaderOffset={60}>
+        <Table stickyHeader stickyHeaderOffset={60} >
           <Table.Thead>
-            <Table.Tr >
-              <Table.Th >Unit</Table.Th>
-              <Table.Th >Type</Table.Th>
-              <Table.Th >Date</Table.Th>
-              <Table.Th >Assigned To</Table.Th>
-              <Table.Th >Status</Table.Th>
-              <Table.Th >Actions</Table.Th>
+            <Table.Tr>
+              <Table.Th>Unit</Table.Th>
+              <Table.Th>Date</Table.Th>
+              <Table.Th>Assigned To</Table.Th>
+              <Table.Th>Status</Table.Th>
+              <Table.Th>Actions</Table.Th>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>{rows}</Table.Tbody>
+          <Table.Caption>Scroll page to see sticky thead</Table.Caption>
         </Table>
       </AppShell.Main>
       <ViewModal opened={viewModalOpened} onClose={closeView} data={selectedData} />

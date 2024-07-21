@@ -20,7 +20,7 @@ import { IconEdit, IconEye, IconTrash } from '@tabler/icons-react';
 
 const items = [
   { title: 'HomePage', href: '/homepage' },
-  { title: 'Resources', href: '#' },
+  { title: 'Staff', href: '#' },
 ].map((item, index) => (
   <Link to={item.href} key={index}>
     {item.title}
@@ -36,21 +36,21 @@ const elements = [
   // ... add other elements as needed
 ];
 
-export function Resource() {
+export function Staff() {
   const [opened, { toggle }] = useDisclosure();
   const [scrolled, setScrolled] = useState(false);
   const [modalOpened, { open, close }] = useDisclosure(false);
 
-  const [ResourceName, setResourceName] = useState('');
-  const [Type, setType] = useState('');
-  const [Quantity, setQuantity] = useState('');
-  const [UnitID, setUnitID] = useState('');
+  const [staffName, setStaffName] = useState('');
+  const [role, setRole] = useState('');
+  const [contact, setContact] = useState('');
+  const [assignUnits, setAssignUnits] = useState('');
 
   const handleAdd = () => {
-    console.log('Resource name:', ResourceName);
-    console.log('Type:', Type);
-    console.log('Quantity:', Quantity);
-    console.log('Unit ID:', UnitID);
+    // Handle the add action here
+    console.log('Unit Name:', staffName);
+    console.log('Plant Name:', role);
+    // Close the modal after adding
     close();
   };
 
@@ -72,6 +72,7 @@ export function Resource() {
       <Table.Td>{element.position}</Table.Td>
       <Table.Td>{element.name}</Table.Td>
       <Table.Td>{element.symbol}</Table.Td>
+      <Table.Td>{element.mass}</Table.Td>
       <Table.Td>
         <Group spacing="xs">
           <IconEye
@@ -91,7 +92,6 @@ export function Resource() {
           />
         </Group>
       </Table.Td>
-      
     </Table.Tr>
   ));
 
@@ -113,7 +113,7 @@ export function Resource() {
       <AppShell.Main>
         <Breadcrumbs ml={15}>{items}</Breadcrumbs>
         <div className={styles.unitHeader}>
-          <h2>Resource</h2>
+          <h2>Staff</h2>
 
           <Modal
             opened={modalOpened}
@@ -125,67 +125,65 @@ export function Resource() {
             centered
           >
             <div className={styles.gridContainer}>
-              <Select
-                label="Resource Name"
-                placeholder="Select Resource name"
-                data={[
-                  { value: 'plant1', label: 'Resource 1' },
-                  { value: 'plant2', label: 'Resource 2' },
-                  { value: 'plant3', label: 'Resource 3' },
-                  // Add more plant options here
-                ]}
-                value={ResourceName}
-                onChange={setResourceName}
+              <TextInput
+                label="Staff Name"
+                placeholder="Enter staff name"
+                value={staffName}
+                onChange={(event) => setStaffName(event.currentTarget.value)}
                 mb="sm"
               />
               <Select
-                label="Type"
-                placeholder="Select Type"
-                data={['Type A', 'Type B', 'Type C']} // Replace with your types
-                value={Type}
-                onChange={setType}
+                label="Role"
+                placeholder="Select Role"
+                data={[
+                  { value: 'plant1', label: 'Plant 1' },
+                  { value: 'plant2', label: 'Plant 2' },
+                  { value: 'plant3', label: 'Plant 3' },
+                  // Add more plant options here
+                ]}
+                value={role}
+                onChange={setRole}
                 mb="sm"
               />
               <TextInput
-                label="Quantity"
-                type="number"
-                placeholder="Quantity"
-                value={Quantity}
-                onChange={(event) => setQuantity(event.currentTarget.value)}
+                label="Contact No"
+                placeholder="Enter contact no"
+                value={contact}
+                onChange={(event) => setContact(event.currentTarget.value)}
                 mb="sm"
               />
               <Select
-                label="Unit"
-                placeholder="Select Unit"
+                label="Assign Units"
+                placeholder="Select Units"
                 data={[
-                  { value: 'plant1', label: 'Resource 1' },
-                  { value: 'plant2', label: 'Resource 2' },
-                  { value: 'plant3', label: 'Resource 3' },
+                  { value: 'plant1', label: 'Plant 1' },
+                  { value: 'plant2', label: 'Plant 2' },
+                  { value: 'plant3', label: 'Plant 3' },
                   // Add more plant options here
                 ]}
-                value={UnitID}
-                onChange={setUnitID}
+                value={assignUnits}
+                onChange={setAssignUnits}
                 mb="sm"
               />
             </div>
-
             <div className={styles.buttonContainer}>
               <Button className={styles.addButtonModal} onClick={handleAdd}>
-                Add Resource
+                Add
               </Button>
             </div>
           </Modal>
 
           <button className={styles.addButton} onClick={open}>
-            Add Resource
+            Add Staff
           </button>
         </div>
         <Table stickyHeader stickyHeaderOffset={60}>
           <Table.Thead>
             <Table.Tr>
-              <Table.Th>Name</Table.Th>
-              <Table.Th>Type</Table.Th>
-              <Table.Th>Quantity</Table.Th>
+              <Table.Th>Staff Name</Table.Th>
+              <Table.Th>Role</Table.Th>
+              <Table.Th>Contact no</Table.Th>
+              <Table.Th>Assigned Units</Table.Th>
               <Table.Th>Actions</Table.Th>
             </Table.Tr>
           </Table.Thead>
@@ -197,10 +195,10 @@ export function Resource() {
   );
 }
 function setSelectedData(data: any) {
-  throw new Error('Function not implemented.');
+    throw new Error('Function not implemented.');
 }
 
 function openView() {
-  throw new Error('Function not implemented.');
+    throw new Error('Function not implemented.');
 }
 

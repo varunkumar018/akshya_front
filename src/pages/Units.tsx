@@ -18,7 +18,7 @@ import classes from './TableScrollArea.module.css';
 import { Link } from 'react-router-dom';
 
 const items = [
-  { title: 'HomePage', href: '/' },
+  { title: 'HomePage', href: '/homepage' },
   { title: 'Units', href: '#' },
 ].map((item, index) => (
   <Link to={item.href} key={index}>
@@ -126,10 +126,10 @@ export function Units() {
           <Table.Thead>
             <Table.Tr>
               <Table.Th>Unit Name</Table.Th>
-              <Table.Th>Plant Name</Table.Th>
-              <Table.Th>Symbol</Table.Th>
-              <Table.Th>Atomic mass</Table.Th>
-              <Table.Th>Actions</Table.Th>
+              <Table.Th>Plant</Table.Th>
+              <Table.Th>Status</Table.Th>
+              <Table.Th>Last Maintenance</Table.Th>
+              <Table.Th>Next Inspection</Table.Th>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>{rows}</Table.Tbody>

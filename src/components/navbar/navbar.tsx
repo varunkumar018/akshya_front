@@ -20,7 +20,7 @@ export function Navbar() {
   return (
     <nav className={classes.navbar}>
       <div className={classes.navbarMain}>
-        <Link to="/" className={classes.link} style={{ textDecoration: 'none' }}> {/* Apply class for consistent styling */}
+        <Link to="/homepage" className={classes.link} style={{ textDecoration: 'none' }}> {/* Apply class for consistent styling */}
           <NavLink
             href="#required-for-focus"
             label="Dashboard"
@@ -28,7 +28,7 @@ export function Navbar() {
           />
         </Link>
 
-        <Link to="/" className={classes.link} style={{ textDecoration: 'none' }}> {/* Apply class for consistent styling */}
+        <Link to="/inspection" className={classes.link} style={{ textDecoration: 'none' }}> {/* Apply class for consistent styling */}
           <NavLink
             href="#required-for-focus"
             label="Inspection"
@@ -68,7 +68,7 @@ export function Navbar() {
           />
         </Link>
 
-        <Link to="/" className={classes.link} style={{ textDecoration: 'none' }}> {/* Apply class for consistent styling */}
+        <Link to="/staff" className={classes.link} style={{ textDecoration: 'none' }}> {/* Apply class for consistent styling */}
           <NavLink
             href="#required-for-focus"
             label="Staff"
@@ -78,15 +78,25 @@ export function Navbar() {
       </div>
 
       <div className={classes.footer}>
-        <a href="src\pages\Settings.tsx" className={classes.link} onClick={(event) => event.preventDefault()}>
-          <IconSettings className={classes.linkIcon} stroke={1.5} size={18} /> {/* Adjust size as needed */}
-          <span className={classes.linkText}>Settings</span> {/* Apply class for consistent styling */}
-        </a>
+        
 
-        <a href="#" className={classes.link} onClick={(event) => event.preventDefault()}>
-          <IconLogout className={classes.linkIcon} stroke={1.5} size={18} /> {/* Adjust size as needed */}
-          <span className={classes.linkText}>Logout</span> {/* Apply class for consistent styling */}
-        </a>
+        <Link to="/settings" className={classes.link} style={{ textDecoration: 'none' }}> {/* Apply class for consistent styling */}
+          <NavLink
+            href="#required-for-focus"
+            label="Settings"
+            leftSection={<IconSettings className={classes.linkIcon} stroke={1.5} size={18} />} // Adjust size as needed
+          />
+        </Link>
+
+        <Link to="/" className={classes.link} style={{ textDecoration: 'none' }}> {/* Apply class for consistent styling */}
+          <NavLink
+            href="#required-for-focus"
+            label="Logout"
+            leftSection={<IconLogout className={classes.linkIcon} stroke={1.5} size={18} />} // Adjust size as needed
+          />
+        </Link>
+
+        
       </div>
     </nav>
   );
