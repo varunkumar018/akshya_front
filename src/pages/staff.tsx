@@ -201,4 +201,3 @@ function setSelectedData(data: any) {
 function openView() {
     throw new Error('Function not implemented.');
 }
-

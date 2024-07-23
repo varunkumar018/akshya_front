@@ -21,63 +21,94 @@ import {
   IconBrandFacebookFilled,
 } from '@tabler/icons-react';
 import classes from './login.module.css';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { b } from 'vitest/dist/suite-IbNSsUWN';
+import { loginPostFunction, UserPostFunction } from '@/pages/utils/login';
 
-const UserTab = () => {
+const SignUpForm = () => {
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [redirectUrl, setRedirectUrl] = useState('');
   const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const handleLogin = () => {
-    if (username === '' && password === '') {
-      // Redirect to the user dashboard
-      window.location.href = '/homepage';
-    } else {
-      // Show alert message for invalid credentials
-      alert('Invalid username or password');
+  const navigate = useNavigate();
+  const handleSignup = async () => {
+    setLoading(true);
+    // creating data
+    const userData = {
+      username: username,
+      email: email,
+      password: password,
+    };
+    const endpoint = 'users';
+    const redirect = '/';
+    try {
+      await UserPostFunction(userData, endpoint, redirect, navigate);
+      setShowSuccess(true);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error:', error);
+      setLoading(false);
     }
   };
 
   return (
     <Fieldset variant="unstyled">
-      <Text size="lg" ta={'center'} >
-        Welcome Back Student
+      <Text size="lg" ta={'center'}>
+        Sign Up
       </Text>
       <TextInput
-        placeholder="username"
+        placeholder="Username"
         value={username}
         onChange={(event) => setUsername(event.target.value)}
       />
+      <TextInput
+        placeholder="Email"
+        value={email}
+        onChange={(event) => setEmail(event.target.value)}
+        mt={'md'}
+      />
       <PasswordInput
         placeholder="Password"
-        mt={'md'}
         value={password}
         onChange={(event) => setPassword(event.target.value)}
+        mt={'md'}
       />
-      <Anchor href="#" underline="hover">
-        <Text ta={'right'}>forgot password?</Text>
-      </Anchor>
-      <Checkbox defaultChecked label="Remember me" size="xs" />
-      <Button fullWidth mt={'md'} color="black" onClick={handleLogin}>
-        Login
+      {/* <PasswordInput
+        placeholder="Confirm Password"
+        value={confirmPassword}
+        onChange={(event) => setConfirmPassword(event.target.value)}
+        mt={'md'}
+      /> */}
+      <Checkbox defaultChecked label="I agree to terms and conditions" size="xs" mt={20} ml={5} />
+      <Button fullWidth mt={'md'} color="black" onClick={handleSignup}>
+        Sign Up
       </Button>
-      
     </Fieldset>
   );
 };
 
-export default UserTab;
-
 const AdminTab = () => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [credentials, setCredentials] = useState({ username: '', password: '' });
+  const [loading, setLoading] = useState(false);
+  const [showModal, setShowModal] = useState(false); // Add this line
+  const [username, setUsername] = useState(false);
+  const [password, setPassword] = useState(false);
 
-  const handleLogin = () => {
-    if (username === '' && password === '') {
-      // Redirect to the dashboard
-      window.location.href = '/homepage';
-    } else {
-      // Show alert message for invalid credentials
-      alert('Invalid username or password');
+  let timeout: NodeJS.Timeout | undefined;
+  const navigate = useNavigate();
+  const handleLogin = async () => {
+    setShowModal(true); // Open the modal
+    setLoading(true);
+    const redirect = '/homepage';
+    try {
+      await loginPostFunction(credentials, redirect, navigate);
+      setLoading(false);
+      setShowModal(false);
+    } catch (error) {
+      console.error(error);
+      setLoading(false);
     }
   };
 
@@ -88,28 +119,25 @@ const AdminTab = () => {
       </Text>
       <TextInput
         placeholder="username"
-        value={username}
-        onChange={(event) => setUsername(event.target.value)}
+        value={credentials.username}
+        onChange={(e) => setCredentials({ ...credentials, username: e.target.value })}
       />
       <PasswordInput
         placeholder="Password"
         mt={'md'}
-        value={password}
-        onChange={(event) => setPassword(event.target.value)}
+        value={credentials.password}
+        onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
       />
       <Anchor href="#" underline="hover">
         <Text ta={'right'}>forgot password?</Text>
       </Anchor>
-      <Checkbox defaultChecked label="Remember me" size="xs" />
+      <Checkbox defaultChecked label="Remember me" size="xs" ml={5} />
       <Button fullWidth mt={'md'} color="black" onClick={handleLogin}>
         Login
       </Button>
-      
     </Fieldset>
   );
 };
-
-// UserTab component remains unchanged
 
 export function Login() {
   return (
@@ -126,10 +154,10 @@ export function Login() {
         <Tabs variant="outline" radius="lg" defaultValue="gallery" className={classes.tabs}>
           <Tabs.List className={classes.tabslist}>
             <Tabs.Tab value="gallery" className={classes.tab}>
-              Admin
+              Sign In
             </Tabs.Tab>
             <Tabs.Tab value="messages" className={classes.tab}>
-              Student
+              Sign Up
             </Tabs.Tab>
           </Tabs.List>
 
@@ -138,7 +166,7 @@ export function Login() {
           </Tabs.Panel>
 
           <Tabs.Panel value="messages" className={classes.panel}>
-            <UserTab />
+            <SignUpForm />
           </Tabs.Panel>
         </Tabs>
       </Grid.Col>
