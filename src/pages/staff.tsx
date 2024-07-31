@@ -9,17 +9,20 @@ import {
   Modal,
   Table,
   TextInput,
+  NativeSelect,
   Select,
+  PasswordInput,
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import styles from './HomePage.module.css';
-import classes from './TableScrollArea.module.css';
 import { Link } from 'react-router-dom';
 import { IconEdit, IconEye, IconTrash } from '@tabler/icons-react';
+import { dataPost, fetchData } from './utils/crud';
 
 const items = [
   { title: 'HomePage', href: '/homepage' },
+  { title: 'Settings', href: '/settings' },
   { title: 'Staff', href: '#' },
 ].map((item, index) => (
   <Link to={item.href} key={index}>
@@ -27,52 +30,125 @@ const items = [
   </Link>
 ));
 
-const elements = [
-  { position: 6, mass: 12.011, symbol: 'C', name: 'Carbon' },
-  { position: 7, mass: 14.007, symbol: 'N', name: 'Nitrogen' },
-  { position: 39, mass: 88.906, symbol: 'Y', name: 'Yttrium' },
-  { position: 56, mass: 137.33, symbol: 'Ba', name: 'Barium' },
-  { position: 58, mass: 140.12, symbol: 'Ce', name: 'Cerium' },
-  // ... add other elements as needed
-];
-
 export function Staff() {
   const [opened, { toggle }] = useDisclosure();
-  const [scrolled, setScrolled] = useState(false);
   const [modalOpened, { open, close }] = useDisclosure(false);
 
   const [staffName, setStaffName] = useState('');
   const [role, setRole] = useState('');
   const [contact, setContact] = useState('');
   const [assignUnits, setAssignUnits] = useState('');
+  const [powerPlant, setPowerPlant] = useState('');
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [staffData, setStaffData] = useState([]);
+  const [unitsData, setUnitsData] = useState([]);
+  const [plantData, setPlantData] = useState([]);
 
-  const handleAdd = () => {
-    // Handle the add action here
-    console.log('Unit Name:', staffName);
-    console.log('Plant Name:', role);
-    // Close the modal after adding
-    close();
+  const handleSubmit = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const token = localStorage.getItem('jwt');
+      const endpoint = 'users/';
+      const body = {
+        username: username,
+        email: email,
+        password: password,
+        staff_name: staffName,
+        role: role,
+        staff_mob: contact,
+        power_plant: powerPlant,
+        unit: assignUnits,
+      };
+
+      console.log('Request body:', body);
+
+      const data = await dataPost(endpoint, 'POST', body, token);
+      console.log('Data posted successfully:', data);
+      await fetchStaffData();
+      close();
+    } catch (error) {
+      console.error('Failed to post data:', error);
+      setError(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleView = (data) => {
-    setSelectedData(data);
-    openView();
+  const fetchStaffData = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('jwt');
+      const endpoint = 'users/';
+      const data = await fetchData(endpoint, 'GET', null, token);
+      if (Array.isArray(data)) {
+        setStaffData(data);
+      } else {
+        console.error('Unexpected response format:', data);
+        setStaffData([]);
+      }
+      console.log(data);
+    } catch (error) {
+      console.error('Failed to fetch projects:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleEdit = (id) => {
-    console.log('Edit', id);
+  const fetchUnitsData = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('jwt');
+      const endpoint = 'api/units/';
+      const data = await fetchData(endpoint, 'GET', null, token);
+      setUnitsData(data);
+    } catch (error) {
+      console.error('Failed to fetch units:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleDelete = (id) => {
-    console.log('Delete', id);
+  const fetchPowerPlantData = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('jwt');
+      const endpoint = 'api/powerplants/';
+      const data = await fetchData(endpoint, 'GET', null, token);
+      setPlantData(data);
+    } catch (error) {
+      console.error('Failed to fetch units:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const rows = elements.map((element) => (
-    <Table.Tr key={element.name}>
-      <Table.Td>{element.position}</Table.Td>
-      <Table.Td>{element.name}</Table.Td>
-      <Table.Td>{element.symbol}</Table.Td>
-      <Table.Td>{element.mass}</Table.Td>
+  useEffect(() => {
+    fetchStaffData();
+    fetchUnitsData();
+    fetchPowerPlantData();
+  }, []);
+
+  const getUnitNameById = (id) => {
+    const unit = unitsData.find((unit) => unit.unit_id === id);
+    return unit ? unit.unit_name : 'Unknown';
+  };
+
+  const getPlantNameById = (id) => {
+    const plant = plantData.find((plant) => plant.plant_id === id);
+    return plant ? plant.name : 'Unknown';
+  };
+
+  const rows = staffData.map((element) => (
+    <Table.Tr key={element.id}>
+      <Table.Td>{element.staff_name}</Table.Td>
+      <Table.Td>{element.role}</Table.Td>
+      <Table.Td>{element.staff_mob}</Table.Td>
+      <Table.Td>{getUnitNameById(element.unit)}</Table.Td>
       <Table.Td>
         <Group spacing="xs">
           <IconEye
@@ -126,23 +202,46 @@ export function Staff() {
           >
             <div className={styles.gridContainer}>
               <TextInput
+                label="Username"
+                placeholder="Enter username"
+                value={username}
+                onChange={(event) => setUsername(event.currentTarget.value)}
+                mb="sm"
+              />
+              <PasswordInput
+                label="Password"
+                placeholder="Enter password"
+                value={password}
+                onChange={(event) => set(event.currentTarget.value)}
+                mb="sm"
+              />
+              <TextInput
+                label="Email"
+                placeholder="Enter email"
+                value={email}
+                onChange={(event) => setEmail(event.currentTarget.value)}
+                mb="sm"
+              />
+              <TextInput
                 label="Staff Name"
                 placeholder="Enter staff name"
                 value={staffName}
                 onChange={(event) => setStaffName(event.currentTarget.value)}
                 mb="sm"
               />
-              <Select
+              <NativeSelect
                 label="Role"
-                placeholder="Select Role"
                 data={[
-                  { value: 'plant1', label: 'Plant 1' },
-                  { value: 'plant2', label: 'Plant 2' },
-                  { value: 'plant3', label: 'Plant 3' },
-                  // Add more plant options here
+                  { value: '', label: 'Select Role' },
+                  { value: 'admin', label: 'Admin' },
+                  { value: 'manager', label: 'Manager' },
+                  { value: 'staff', label: 'Staff' },
                 ]}
                 value={role}
-                onChange={setRole}
+                onChange={(event) => {
+                  setRole(event.currentTarget.value);
+                  console.log('Role selected:', event.currentTarget.value); // Debug log
+                }}
                 mb="sm"
               />
               <TextInput
@@ -153,21 +252,30 @@ export function Staff() {
                 mb="sm"
               />
               <Select
-                label="Assign Units"
-                placeholder="Select Units"
-                data={[
-                  { value: 'plant1', label: 'Plant 1' },
-                  { value: 'plant2', label: 'Plant 2' },
-                  { value: 'plant3', label: 'Plant 3' },
-                  // Add more plant options here
-                ]}
+                label="Power Plant"
+                placeholder="Select Plant"
+                data={plantData.map((plant) => ({
+                  value: plant.plant_id.toString(),
+                  label: plant.name,
+                }))}
+                value={powerPlant}
+                onChange={setPowerPlant}
+                mb="sm"
+              />
+              <Select
+                label="Assign Unit"
+                placeholder="Select Unit"
+                data={unitsData.map((unit) => ({
+                  value: unit.unit_id.toString(),
+                  label: unit.unit_name,
+                }))}
                 value={assignUnits}
                 onChange={setAssignUnits}
                 mb="sm"
               />
             </div>
             <div className={styles.buttonContainer}>
-              <Button className={styles.addButtonModal} onClick={handleAdd}>
+              <Button className={styles.addButtonModal} onClick={handleSubmit}>
                 Add
               </Button>
             </div>
@@ -177,27 +285,19 @@ export function Staff() {
             Add Staff
           </button>
         </div>
-        <Table stickyHeader stickyHeaderOffset={60}>
+        <Table stickyHeader>
           <Table.Thead>
             <Table.Tr>
               <Table.Th>Staff Name</Table.Th>
               <Table.Th>Role</Table.Th>
-              <Table.Th>Contact no</Table.Th>
-              <Table.Th>Assigned Units</Table.Th>
+              <Table.Th>Contact No</Table.Th>
+              <Table.Th>Assigned Unit</Table.Th>
               <Table.Th>Actions</Table.Th>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>{rows}</Table.Tbody>
-          <Table.Caption>Scroll page to see sticky thead</Table.Caption>
         </Table>
       </AppShell.Main>
     </AppShell>
   );
-}
-function setSelectedData(data: any) {
-    throw new Error('Function not implemented.');
-}
-
-function openView() {
-    throw new Error('Function not implemented.');
 }

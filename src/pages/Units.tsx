@@ -12,28 +12,21 @@ import {
   Select,
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import styles from './HomePage.module.css';
 import classes from './TableScrollArea.module.css';
 import { Link } from 'react-router-dom';
+import { dataPost, fetchData } from './utils/crud';
 
 const items = [
   { title: 'HomePage', href: '/homepage' },
+  { title: 'Settings', href: '/settings' },
   { title: 'Units', href: '#' },
 ].map((item, index) => (
   <Link to={item.href} key={index}>
     {item.title}
   </Link>
 ));
-
-const elements = [
-  { position: 6, mass: 12.011, symbol: 'C', name: 'Carbon' },
-  { position: 7, mass: 14.007, symbol: 'N', name: 'Nitrogen' },
-  { position: 39, mass: 88.906, symbol: 'Y', name: 'Yttrium' },
-  { position: 56, mass: 137.33, symbol: 'Ba', name: 'Barium' },
-  { position: 58, mass: 140.12, symbol: 'Ce', name: 'Cerium' },
-  // ... add other elements as needed
-];
 
 export function Units() {
   const [opened, { toggle }] = useDisclosure();
@@ -42,21 +35,74 @@ export function Units() {
 
   const [unitName, setUnitName] = useState('');
   const [plantName, setPlantName] = useState('');
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [unitsData, setUnitsData] = useState([]);
+  const [powerplantData, setPowerPlantData] = useState([]);
 
-  const handleAdd = () => {
-    // Handle the add action here
-    console.log('Unit Name:', unitName);
-    console.log('Plant Name:', plantName);
-    // Close the modal after adding
-    close();
+  const fetchPowerPlantData = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('jwt');
+      const endpoint = 'api/powerplants/';
+      const data = await fetchData(endpoint, 'GET', null, token);
+      setPowerPlantData(data);
+    } catch (error) {
+      console.error('Failed to fetch power plants:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const rows = elements.map((element) => (
-    <Table.Tr key={element.name}>
-      <Table.Td>{element.position}</Table.Td>
-      <Table.Td>{element.name}</Table.Td>
-      <Table.Td>{element.symbol}</Table.Td>
-      <Table.Td>{element.mass}</Table.Td>
+  const handleSubmit = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const token = localStorage.getItem('jwt');
+      const endpoint = 'api/units/';
+      const body = {
+        unit_name: unitName,
+        power_plant: plantName,
+      };
+
+      const data = await dataPost(endpoint, 'POST', body, token);
+      await fetchUnitsData();
+      close();
+    } catch (error) {
+      setError(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchUnitsData = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('jwt');
+      const endpoint = 'api/units/';
+      const data = await fetchData(endpoint, 'GET', null, token);
+      setUnitsData(data);
+    } catch (error) {
+      console.error('Failed to fetch units:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPowerPlantData();
+    fetchUnitsData();
+  }, []);
+
+  const getPlantNameById = (id) => {
+    const plant = powerplantData.find((plant) => plant.plant_id === id);
+    return plant ? plant.name : 'Unknown';
+  };
+
+  const rows = unitsData.map((element) => (
+    <Table.Tr key={element.unit_name}>
+      <Table.Td>{element.unit_name}</Table.Td>
+      <Table.Td>{getPlantNameById(element.power_plant)}</Table.Td>
     </Table.Tr>
   ));
 
@@ -100,19 +146,17 @@ export function Units() {
               <Select
                 label="Plant Name"
                 placeholder="Select plant name"
-                data={[
-                  { value: 'plant1', label: 'Plant 1' },
-                  { value: 'plant2', label: 'Plant 2' },
-                  { value: 'plant3', label: 'Plant 3' },
-                  // Add more plant options here
-                ]}
+                data={powerplantData.map((plant) => ({
+                  value: plant.plant_id.toString(), // Ensure value is a string
+                  label: plant.name,
+                }))}
                 value={plantName}
                 onChange={setPlantName}
                 mb="sm"
               />
             </div>
             <div className={styles.buttonContainer}>
-              <Button className={styles.addButtonModal} onClick={handleAdd}>
+              <Button className={styles.addButtonModal} onClick={handleSubmit}>
                 Add
               </Button>
             </div>
@@ -126,7 +170,7 @@ export function Units() {
           <Table.Thead>
             <Table.Tr>
               <Table.Th>Unit Name</Table.Th>
-              <Table.Th>Plant</Table.Th>
+              <Table.Th>Plant Name</Table.Th>
               <Table.Th>Status</Table.Th>
               <Table.Th>Last Maintenance</Table.Th>
               <Table.Th>Next Inspection</Table.Th>

@@ -10,15 +10,15 @@ import {
   Select,
   Table,
   TextInput,
-  Textarea,
   Checkbox,
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import styles from './HomePage.module.css';
 import classes from './TableScrollArea.module.css';
 import { Link } from 'react-router-dom';
 import { IconEdit, IconEye, IconTrash } from '@tabler/icons-react';
+import { dataPost, fetchData } from './utils/crud';
 
 const items = [
   { title: 'HomePage', href: '/homepage' },
@@ -29,29 +29,33 @@ const items = [
   </Link>
 ));
 
-const elements = [
-  { position: 6, mass: 12.011, symbol: 'C', name: 'Carbon', status: 'pending' },
-  { position: 7, mass: 14.007, symbol: 'N', name: 'Nitrogen', status: 'pending' },
-  { position: 39, mass: 88.906, symbol: 'Y', name: 'Yttrium', status: 'pending' },
-  { position: 56, mass: 137.33, symbol: 'Ba', name: 'Barium', status: 'pending' },
-  { position: 58, mass: 140.12, symbol: 'Ce', name: 'Cerium', status: 'pending' },
-  // ... add other elements as needed
-];
-
 const ViewModal = ({ opened, onClose, data }) => (
   <Modal opened={opened} onClose={onClose} centered>
     <div style={{ padding: '20px' }}>
-      <div><strong>Unit:</strong> {data.unit}</div>
-      <div><strong>Date:</strong> {data.date}</div>
-      <div><strong>Status:</strong> <span style={{ color: data.statusColor }}>{data.status}</span></div>
-      <div><strong>Maintenance type:</strong> {data.type}</div>
-      <div><strong>Description:</strong> {data.description}</div>
-      <div><strong>Assigned To:</strong></div>
+      <div>
+        <strong>Unit:</strong> {data.unit}
+      </div>
+      <div>
+        <strong>Date:</strong> {data.date}
+      </div>
+      <div>
+        <strong>Status:</strong> <span style={{ color: data.statusColor }}>{data.status}</span>
+      </div>
+      <div>
+        <strong>Maintenance type:</strong> {data.type}
+      </div>
+      <div>
+        <strong>Specification:</strong> {data.specification}
+      </div>
+      <div>
+        <strong>Assigned To:</strong>
+      </div>
       <div>Name: {data.assignedTo?.name ?? 'N/A'}</div>
       <div>Department: {data.assignedTo?.department ?? 'N/A'}</div>
       <div>Place: {data.assignedTo?.place ?? 'N/A'}</div>
-      <div><strong>Completed date:</strong> {data.completedDate}</div>
-      <div><strong>Comments:</strong> {data.comments}</div>
+      <div>
+        <strong>Completed date:</strong> {data.completedDate}
+      </div>
       <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
         <Button>Generate Report</Button>
       </div>
@@ -59,65 +63,110 @@ const ViewModal = ({ opened, onClose, data }) => (
   </Modal>
 );
 
-const AssignModal = ({ opened, onClose, data, onAssign }) => (
-  <Modal opened={opened} onClose={onClose} centered>
-    <div style={{ padding: '20px' }}>
-      <h3>Unit Wise Workers List</h3>
-      <Table>
-        <Table.Thead>
-          <Table.Tr>
-            <Table.Th>Name</Table.Th>
-            <Table.Th>Department</Table.Th>
-            <Table.Th>Select</Table.Th>
-          </Table.Tr>
-        </Table.Thead>
-        <Table.Tbody>
-          {data.map((worker, index) => (
-            <Table.Tr key={index}>
-              <Table.Td>{worker.name}</Table.Td>
-              <Table.Td>{worker.department}</Table.Td>
-              <Table.Td>
-                <Checkbox />
-              </Table.Td>
+const AssignModal = ({ opened, onClose, unitId, unitsData, workersData, onAssign }) => {
+  return(
+    <Modal opened={opened} onClose={onClose} centered>
+      <div style={{ padding: '20px' }}>
+        <h3>Unit Wise Workers List</h3>
+        <Select
+          label="Unit"
+          placeholder="Select Unit"
+          data={unitsData.map((unit) => ({
+            value: unit.unit_id.toString(), // Ensure value is a string
+            label: unit.unit_name,
+          }))}
+          value={unitID}
+          onChange={setUnitID}
+          mb="sm"
+        />
+        <Table>
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th>Name</Table.Th>
+              <Table.Th>Select</Table.Th>
             </Table.Tr>
-          ))}
-        </Table.Tbody>
-      </Table>
-      <Button onClick={onAssign} style={{ display: 'block', margin: '20px auto', backgroundColor: 'black' }}>Assign</Button>
-    </div>
-  </Modal>
-);
+          </Table.Thead>
+          <Table.Tbody>
+            {workersData.map((worker, index) => (
+              <Table.Tr key={index}>
+                <Table.Td>{worker.staff_name}</Table.Td>
+                <Table.Td>
+                  <Checkbox />
+                </Table.Td>
+              </Table.Tr>
+            ))}
+          </Table.Tbody>
+        </Table>
+        <Button
+          onClick={onAssign}
+          style={{ display: 'block', margin: '20px auto', backgroundColor: 'black' }}
+        >
+          Assign
+        </Button>
+      </div>
+    </Modal>
+  );
+};
 
 export function Maintenance() {
   const [opened, { toggle }] = useDisclosure();
-  const [scrolled, setScrolled] = useState(false);
   const [modalOpened, { open, close }] = useDisclosure(false);
   const [viewModalOpened, { open: openView, close: closeView }] = useDisclosure(false);
   const [assignModalOpened, { open: openAssign, close: closeAssign }] = useDisclosure(false);
   const [selectedData, setSelectedData] = useState({});
-  const [workersData, setWorkersData] = useState([
-    { name: 'AAAAA', department: 'manage' },
-    { name: 'BBBBB', department: 'As.Manager' },
-    { name: 'CCCCC', department: 'Inspector' },
-    { name: 'DDDDD', department: 'manage' },
-    // Add more workers as needed
-  ]);
+  const [workersData, setWorkersData] = useState([]);
 
-  const [ResourceName, setResourceName] = useState('');
-  const [Type, setType] = useState('');
-  const [DateValue, setDateValue] = useState(new Date());
-  const [UnitID, setUnitID] = useState('');
+  const [specification, setSpecification] = useState('');
+  const [type, setType] = useState('');
+  const [mdate, setMdate] = useState(new Date());
+  const [unitID, setUnitID] = useState('');
 
-  const handleAdd = () => {
-    console.log('Resource name:', ResourceName);
-    console.log('Type:', Type);
-    console.log('Date:', DateValue);
-    console.log('Unit ID:', UnitID);
-    close();
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [maintenanceData, setMaintenanceData] = useState([]);
+  const [unitsData, setUnitsData] = useState([]);
+
+  const handleSubmit = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const token = localStorage.getItem('jwt');
+      const endpoint = 'api/maintenance/'; // Replace with your actual endpoint
+      const formattedDate = new Date(mdate).toISOString().split('T')[0]; // Convert to yyyy-MM-dd
+      const body = {
+        unit_id: unitID,
+        maintenance_type: type,
+        maintenance_date: formattedDate,
+        record_specifications: specification,
+      };
+
+      console.log('Request body:', body);
+
+      const data = await dataPost(endpoint, 'POST', body, token);
+      console.log('Data posted successfully:', data);
+      await fetchMaintenanceData();
+      close();
+    } catch (error) {
+      console.error('Failed to post data:', error);
+      setError(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleView = (data) => {
-    setSelectedData(data);
+  const handleView = (element) => {
+    const viewData = {
+      unit: getUnitNameById(element.unit_id),
+      date: element.maintenance_date,
+      status: element.status,
+      statusColor: 'blue', // Adjust this based on your status logic
+      type: element.maintenance_type,
+      specification: element.record_specifications,
+      assignedTo: element.assigned_to, // Assuming your data structure has an assigned_to field
+      completedDate: element.completed_date,
+    };
+
+    setSelectedData(viewData);
     openView();
   };
 
@@ -134,32 +183,78 @@ export function Maintenance() {
     closeAssign();
   };
 
-  const rows = elements.map((element) => (
+  const fetchMaintenanceData = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('jwt');
+      const endpoint = 'api/maintenance/';
+      const data = await fetchData(endpoint, 'GET', null, token);
+      if (Array.isArray(data)) {
+        setMaintenanceData(data);
+      } else {
+        console.error('Unexpected response format:', data);
+        setMaintenanceData([]);
+      }
+      console.log(data);
+    } catch (error) {
+      console.error('Failed to fetch projects:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchUsersData = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('jwt');
+      const endpoint = 'users/';
+      const data = await fetchData(endpoint, 'GET', null, token);
+      setWorkersData(data);
+    } catch (error) {
+      console.error('Failed to fetch units:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchUnitsData = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('jwt');
+      const endpoint = 'api/units/';
+      const data = await fetchData(endpoint, 'GET', null, token);
+      setUnitsData(data);
+    } catch (error) {
+      console.error('Failed to fetch units:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchMaintenanceData();
+    // fetchUnitsData();
+  }, []);
+
+  const getUnitNameById = (id) => {
+    const unit = unitsData.find((unit) => unit.unit_id === id);
+    return unit ? unit.unit_name : 'Unknown';
+  };
+
+  const rows = maintenanceData.map((element) => (
     <Table.Tr key={element.name}>
-      <Table.Td>{element.position}</Table.Td>
-      <Table.Td>{element.name}</Table.Td>
-      <Table.Td>{element.symbol}</Table.Td>
-      <Table.Td><Button className={styles.button} onClick={openAssign} >Assign to</Button></Table.Td>
+      <Table.Td>{getUnitNameById(element.unit_id)}</Table.Td>
+      <Table.Td>{element.maintenance_type}</Table.Td>
+      <Table.Td>{element.maintenance_date}</Table.Td>
+      <Table.Td>
+        <Button className={styles.button} onClick={openAssign}>
+          Assign to
+        </Button>
+      </Table.Td>
       <Table.Td>{element.status}</Table.Td>
       <Table.Td>
         <Group>
-          <IconEye
-            size={20}
-            onClick={() =>
-              handleView({
-                unit: element.name,
-                date: 'DD/MM/YYYY',
-                status: 'Started',
-                statusColor: 'blue',
-                type: 'Type name',
-                description: 'Join us for an elegant evening of dining and entertainment...',
-                assignedTo: { name: 'John Doe', department: 'Maintenance', place: 'Building 1' },
-                completedDate: 'DD/MM/YYYY',
-                comments: 'From the Worker',
-              })
-            }
-            style={{ cursor: 'pointer' }}
-          />
+          <IconEye size={20} onClick={() => handleView(element)} style={{ cursor: 'pointer' }} />
           <IconEdit
             size={20}
             onClick={() => handleEdit(element.name)}
@@ -208,16 +303,19 @@ export function Maintenance() {
               <Select
                 label="Unit"
                 placeholder="Select Unit"
-                data={['Unit 1', 'Unit 2', 'Unit 3']} // Replace with your units
-                value={ResourceName}
-                onChange={setResourceName}
+                data={unitsData.map((unit) => ({
+                  value: unit.unit_id.toString(), // Ensure value is a string
+                  label: unit.unit_name,
+                }))}
+                value={unitID}
+                onChange={setUnitID}
                 mb="sm"
               />
               <Select
                 label="Type"
                 placeholder="Select Type"
-                data={['Type A', 'Type B', 'Type C']} // Replace with your types
-                value={Type}
+                data={['Type A', 'Type B', 'Type C'].map((type) => ({ value: type, label: type }))}
+                value={type}
                 onChange={setType}
                 mb="sm"
               />
@@ -225,21 +323,23 @@ export function Maintenance() {
                 label="Date"
                 type="date"
                 placeholder="Pick a date"
-                value={DateValue}
-                onChange={setDateValue}
+                value={
+                  mdate instanceof Date && !isNaN(mdate) ? mdate.toISOString().split('T')[0] : ''
+                }
+                onChange={(event) => setMdate(new Date(event.currentTarget.value))} // Update state with new Date object
                 mb="sm"
               />
               <TextInput
                 label="Record Specification"
                 placeholder="Record Specification"
-                value={UnitID}
-                onChange={(event) => setUnitID(event.currentTarget.value)}
+                value={specification}
+                onChange={(event) => setSpecification(event.currentTarget.value)}
                 mb="sm"
               />
             </div>
 
             <div className={styles.buttonContainer}>
-              <Button className={styles.addButtonModal} onClick={handleAdd}>
+              <Button className={styles.addButtonModal} onClick={handleSubmit}>
                 Add
               </Button>
             </div>
@@ -251,20 +351,25 @@ export function Maintenance() {
         </div>
         <Table stickyHeader stickyHeaderOffset={60}>
           <Table.Thead>
-            <Table.Tr >
-              <Table.Th >Unit</Table.Th>
-              <Table.Th >Type</Table.Th>
-              <Table.Th >Date</Table.Th>
-              <Table.Th >Assigned To</Table.Th>
-              <Table.Th >Status</Table.Th>
-              <Table.Th >Actions</Table.Th>
+            <Table.Tr>
+              <Table.Th>Unit</Table.Th>
+              <Table.Th>Type</Table.Th>
+              <Table.Th>Date</Table.Th>
+              <Table.Th>Assigned To</Table.Th>
+              <Table.Th>Status</Table.Th>
+              <Table.Th>Actions</Table.Th>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>{rows}</Table.Tbody>
         </Table>
       </AppShell.Main>
       <ViewModal opened={viewModalOpened} onClose={closeView} data={selectedData} />
-      <AssignModal opened={assignModalOpened} onClose={closeAssign} data={workersData} onAssign={handleAssign} />
+      <AssignModal
+        opened={assignModalOpened}
+        onClose={closeAssign}
+        data={workersData}
+        onAssign={handleAssign}
+      />
     </AppShell>
   );
 }

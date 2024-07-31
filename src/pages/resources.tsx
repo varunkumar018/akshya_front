@@ -12,11 +12,12 @@ import {
   Select,
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import styles from './HomePage.module.css';
 import classes from './TableScrollArea.module.css';
 import { Link } from 'react-router-dom';
 import { IconEdit, IconEye, IconTrash } from '@tabler/icons-react';
+import { dataPost, fetchData } from './utils/crud';
 
 const items = [
   { title: 'HomePage', href: '/homepage' },
@@ -27,31 +28,47 @@ const items = [
   </Link>
 ));
 
-const elements = [
-  { position: 6, mass: 12.011, symbol: 'C', name: 'Carbon' },
-  { position: 7, mass: 14.007, symbol: 'N', name: 'Nitrogen' },
-  { position: 39, mass: 88.906, symbol: 'Y', name: 'Yttrium' },
-  { position: 56, mass: 137.33, symbol: 'Ba', name: 'Barium' },
-  { position: 58, mass: 140.12, symbol: 'Ce', name: 'Cerium' },
-  // ... add other elements as needed
-];
-
 export function Resource() {
   const [opened, { toggle }] = useDisclosure();
   const [scrolled, setScrolled] = useState(false);
   const [modalOpened, { open, close }] = useDisclosure(false);
 
-  const [ResourceName, setResourceName] = useState('');
-  const [Type, setType] = useState('');
-  const [Quantity, setQuantity] = useState('');
-  const [UnitID, setUnitID] = useState('');
+  const [resourceName, setResourceName] = useState('');
+  const [type, setType] = useState('');
+  const [quantity, setQuantity] = useState('');
+  const [unitID, setUnitID] = useState('');
+  const [error, setError] = useState(null);
 
-  const handleAdd = () => {
-    console.log('Resource name:', ResourceName);
-    console.log('Type:', Type);
-    console.log('Quantity:', Quantity);
-    console.log('Unit ID:', UnitID);
-    close();
+  const [loading, setLoading] = useState(true);
+  const [resourceData, setResourceData] = useState([]); // Ensure it's an array initially
+  const [unitsData, setUnitsData] = useState([]);
+
+  const handleSubmit = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const token = localStorage.getItem('jwt');
+      const endpoint = 'api/resources/'; // Replace with your actual endpoint
+      const body = {
+        name: resourceName,
+        type: type,
+        quantity: quantity,
+        unit: unitID,
+      };
+
+      // Debug: log the body object to verify its structure
+      console.log('Request body:', body);
+
+      const data = await dataPost(endpoint, 'POST', body, token);
+      console.log('Data posted successfully:', data);
+      await fetchResourceData();
+      close();
+    } catch (error) {
+      console.error('Failed to post data:', error);
+      setError(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleView = (data) => {
@@ -67,33 +84,74 @@ export function Resource() {
     console.log('Delete', id);
   };
 
-  const rows = elements.map((element) => (
-    <Table.Tr key={element.name}>
-      <Table.Td>{element.position}</Table.Td>
-      <Table.Td>{element.name}</Table.Td>
-      <Table.Td>{element.symbol}</Table.Td>
-      <Table.Td>
-        <Group spacing="xs">
-          <IconEye
-            size={20}
-            onClick={() => handleView(element.name)}
-            style={{ cursor: 'pointer' }}
-          />
-          <IconEdit
-            size={20}
-            onClick={() => handleEdit(element.name)}
-            style={{ cursor: 'pointer' }}
-          />
-          <IconTrash
-            size={20}
-            onClick={() => handleDelete(element.name)}
-            style={{ cursor: 'pointer' }}
-          />
-        </Group>
-      </Table.Td>
-      
-    </Table.Tr>
-  ));
+  const fetchResourceData = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('jwt');
+      const endpoint = 'api/resources/';
+      const data = await fetchData(endpoint, 'GET', null, token);
+      // Ensure data is an array
+      if (Array.isArray(data)) {
+        setResourceData(data);
+      } else {
+        console.error('Unexpected response format:', data);
+        setResourceData([]);
+      }
+      console.log(data);
+    } catch (error) {
+      console.error('Failed to fetch projects:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchUnitsData = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('jwt');
+      const endpoint = 'api/units/';
+      const data = await fetchData(endpoint, 'GET', null, token);
+      setUnitsData(data);
+    } catch (error) {
+      console.error('Failed to fetch units:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchResourceData();
+    fetchUnitsData();
+  }, []);
+
+  const rows = Array.isArray(resourceData)
+    ? resourceData.map((element) => (
+        <Table.Tr key={element.name}>
+          <Table.Td>{element.name}</Table.Td>
+          <Table.Td>{element.type}</Table.Td>
+          <Table.Td>{element.quantity}</Table.Td>
+          <Table.Td>
+            <Group spacing="xs">
+              <IconEye
+                size={20}
+                onClick={() => handleView(element.name)}
+                style={{ cursor: 'pointer' }}
+              />
+              <IconEdit
+                size={20}
+                onClick={() => handleEdit(element.name)}
+                style={{ cursor: 'pointer' }}
+              />
+              <IconTrash
+                size={20}
+                onClick={() => handleDelete(element.name)}
+                style={{ cursor: 'pointer' }}
+              />
+            </Group>
+          </Table.Td>
+        </Table.Tr>
+      ))
+    : null;
 
   return (
     <AppShell
@@ -129,12 +187,12 @@ export function Resource() {
                 label="Resource Name"
                 placeholder="Select Resource name"
                 data={[
-                  { value: 'plant1', label: 'Resource 1' },
-                  { value: 'plant2', label: 'Resource 2' },
-                  { value: 'plant3', label: 'Resource 3' },
+                  { value: 'Resource 1', label: 'Resource 1' },
+                  { value: 'Resource 2', label: 'Resource 2' },
+                  { value: 'Resource 3', label: 'Resource 3' },
                   // Add more plant options here
                 ]}
-                value={ResourceName}
+                value={resourceName}
                 onChange={setResourceName}
                 mb="sm"
               />
@@ -142,7 +200,7 @@ export function Resource() {
                 label="Type"
                 placeholder="Select Type"
                 data={['Type A', 'Type B', 'Type C']} // Replace with your types
-                value={Type}
+                value={type}
                 onChange={setType}
                 mb="sm"
               />
@@ -150,27 +208,25 @@ export function Resource() {
                 label="Quantity"
                 type="number"
                 placeholder="Quantity"
-                value={Quantity}
+                value={quantity}
                 onChange={(event) => setQuantity(event.currentTarget.value)}
                 mb="sm"
               />
               <Select
                 label="Unit"
                 placeholder="Select Unit"
-                data={[
-                  { value: 'plant1', label: 'Resource 1' },
-                  { value: 'plant2', label: 'Resource 2' },
-                  { value: 'plant3', label: 'Resource 3' },
-                  // Add more plant options here
-                ]}
-                value={UnitID}
+                data={unitsData.map((unit) => ({
+                  value: unit.unit_id.toString(), // Ensure value is a string
+                  label: unit.unit_name,
+                }))}
+                value={unitID}
                 onChange={setUnitID}
                 mb="sm"
               />
             </div>
 
             <div className={styles.buttonContainer}>
-              <Button className={styles.addButtonModal} onClick={handleAdd}>
+              <Button className={styles.addButtonModal} onClick={handleSubmit}>
                 Add Resource
               </Button>
             </div>
@@ -196,6 +252,7 @@ export function Resource() {
     </AppShell>
   );
 }
+
 function setSelectedData(data: any) {
   throw new Error('Function not implemented.');
 }
@@ -203,4 +260,3 @@ function setSelectedData(data: any) {
 function openView() {
   throw new Error('Function not implemented.');
 }
-

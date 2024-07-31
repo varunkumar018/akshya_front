@@ -12,14 +12,16 @@ import {
   Select,
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import styles from './HomePage.module.css';
 import classes from './TableScrollArea.module.css';
 import { Link } from 'react-router-dom';
 import { IconEdit, IconEye, IconTrash } from '@tabler/icons-react';
+import { dataPost, fetchData } from './utils/crud';
 
 const items = [
   { title: 'HomePage', href: '/homepage' },
+  { title: 'Settings', href: '/settings' },
   { title: 'Power Plant', href: '#' },
 ].map((item, index) => (
   <Link to={item.href} key={index}>
@@ -41,17 +43,45 @@ export function PowerPlant() {
   const [scrolled, setScrolled] = useState(false);
   const [modalOpened, { open, close }] = useDisclosure(false);
 
-  const [ResourceName, setResourceName] = useState('');
-  const [Type, setType] = useState('');
-  const [Quantity, setQuantity] = useState('');
-  const [UnitID, setUnitID] = useState('');
+  const [plantName, setPlantName] = useState('');
+  const [location, setLocation] = useState('');
+  const [capacity, setCapacity] = useState('');
+  const [energyType, setEnergyType] = useState('');
 
-  const handleAdd = () => {
-    console.log('Resource name:', ResourceName);
-    console.log('Type:', Type);
-    console.log('Quantity:', Quantity);
-    console.log('Unit ID:', UnitID);
-    close();
+  const [error, setError] = useState(null);
+
+  const click = () => {
+    alert('Clicked');
+  };
+  const [loading, setLoading] = useState(true);
+  const [powerplantData, setPowerPlantData] = useState([]);
+
+  const handleSubmit = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const token = localStorage.getItem('jwt');
+      const endpoint = 'api/powerplants/'; // Replace with your actual endpoint
+      const body = {
+        name: plantName,
+        location: location,
+        capacity: capacity,
+        type_of_energy: energyType,
+      };
+
+      // Debug: log the body object to verify its structure
+      console.log('Request body:', body);
+
+      const data = await dataPost(endpoint, 'POST', body, token);
+      console.log('Data posted successfully:', data);
+      await fetchPowerPlantData();
+      close();
+    } catch (error) {
+      console.error('Failed to post data:', error);
+      setError(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleView = (data) => {
@@ -67,12 +97,31 @@ export function PowerPlant() {
     console.log('Delete', id);
   };
 
-  const rows = elements.map((element) => (
+  const fetchPowerPlantData = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('jwt');
+      const endpoint = 'api/powerplants/';
+      const data = await fetchData(endpoint, 'GET', null, token);
+      setPowerPlantData(data);
+
+      console.log(data);
+    } catch (error) {
+      console.error('Failed to fetch projects:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
+    fetchPowerPlantData();
+  }, []);
+
+  const rows = powerplantData.map((element) => (
     <Table.Tr key={element.name}>
-      <Table.Td>{element.position}</Table.Td>
       <Table.Td>{element.name}</Table.Td>
-      <Table.Td>{element.symbol}</Table.Td>
-      <Table.Td>{element.mass}</Table.Td>
+      <Table.Td>{element.location}</Table.Td>
+      <Table.Td>{element.capacity}</Table.Td>
+      <Table.Td>{element.type_of_energy}</Table.Td>
       <Table.Td>
         <Group spacing="xs">
           <IconEye
@@ -126,31 +175,32 @@ export function PowerPlant() {
           >
             <div className={styles.gridContainer}>
               <TextInput
-                label="Location"
-                placeholder="Location"
-                value={Type}
-                onChange={(event) => setType(event.currentTarget.value)}
+                label="Plant Name"
+                placeholder="Name"
+                value={plantName}
+                onChange={(event) => setPlantName(event.currentTarget.value)}
                 mb="sm"
               />
-              <Select
-                label="Location"
-                placeholder="Select Location"
-                data={[
-                  { value: 'plant1', label: 'Resource 1' },
-                  { value: 'plant2', label: 'Resource 2' },
-                  { value: 'plant3', label: 'Resource 3' },
-                  // Add more plant options here
-                ]}
-                value={Type}
-                onChange={setType}
-                mb="sm"
-              />
+
               <TextInput
                 label="Capacity"
                 type="number"
                 placeholder="Capacity"
-                value={Quantity}
-                onChange={(event) => setQuantity(event.currentTarget.value)}
+                value={capacity}
+                onChange={(event) => setCapacity(event.currentTarget.value)}
+                mb="sm"
+              />
+
+              <Select
+                label="Location"
+                placeholder="Select Location"
+                data={[
+                  { value: 'location1', label: 'Location 1' },
+                  { value: 'location2', label: 'Location 2' },
+                  { value: 'location3', label: 'Location 3' },
+                ]}
+                value={location}
+                onChange={setLocation}
                 mb="sm"
               />
 
@@ -158,19 +208,18 @@ export function PowerPlant() {
                 label="Type of Energy"
                 placeholder="Select Type of Energy"
                 data={[
-                  { value: 'plant1', label: 'Resource 1' },
-                  { value: 'plant2', label: 'Resource 2' },
-                  { value: 'plant3', label: 'Resource 3' },
-                  // Add more plant options here
+                  { value: 'solar', label: 'Solar' },
+                  { value: 'wind', label: 'Wind' },
+                  { value: 'hydro', label: 'Hydro' },
                 ]}
-                value={UnitID}
-                onChange={setUnitID}
+                value={energyType}
+                onChange={setEnergyType}
                 mb="sm"
               />
             </div>
 
             <div className={styles.buttonContainer}>
-              <Button className={styles.addButtonModal} onClick={handleAdd}>
+              <Button className={styles.addButtonModal} onClick={handleSubmit}>
                 Add
               </Button>
             </div>
@@ -204,4 +253,3 @@ function openView() {
 function setSelectedData(data: any) {
   throw new Error('Function not implemented.');
 }
-

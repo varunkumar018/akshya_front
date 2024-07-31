@@ -14,11 +14,12 @@ import {
   Checkbox,
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import styles from './HomePage.module.css';
 import classes from './TableScrollArea.module.css';
 import { Link } from 'react-router-dom';
 import { IconEdit, IconEye, IconTrash } from '@tabler/icons-react';
+import { dataPost, fetchData } from './utils/crud';
 
 const items = [
   { title: 'HomePage', href: '/homepage' },
@@ -28,15 +29,6 @@ const items = [
     {item.title}
   </Link>
 ));
-
-const elements = [
-  { position: 6, mass: 12.011, symbol: 'C', name: 'Carbon', status: 'pending' },
-  { position: 7, mass: 14.007, symbol: 'N', name: 'Nitrogen', status: 'pending' },
-  { position: 39, mass: 88.906, symbol: 'Y', name: 'Yttrium', status: 'pending' },
-  { position: 56, mass: 137.33, symbol: 'Ba', name: 'Barium', status: 'pending' },
-  { position: 58, mass: 140.12, symbol: 'Ce', name: 'Cerium', status: 'pending' },
-  // ... add other elements as needed
-];
 
 const ViewModal = ({ opened, onClose, data }) => (
   <Modal opened={opened} onClose={onClose} centered>
@@ -103,18 +95,55 @@ export function Inspection() {
   const [ResourceName, setResourceName] = useState('');
   const [Type, setType] = useState('');
   const [DateValue, setDateValue] = useState(new Date());
-  const [UnitID, setUnitID] = useState('');
+  const [unitID, setUnitID] = useState('');
+  const [idate, setIdate] = useState('');
 
-  const handleAdd = () => {
-    console.log('Resource name:', ResourceName);
-    console.log('Type:', Type);
-    console.log('Date:', DateValue);
-    console.log('Unit ID:', UnitID);
-    close();
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [inspectionData, setInspectionData] = useState([]);
+  const [unitsData, setUnitsData] = useState([]);
+
+  const handleSubmit = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const token = localStorage.getItem('jwt');
+      const endpoint = 'api/inspections/'; // Replace with your actual endpoint
+      const formattedDate = new Date(idate).toISOString().split('T')[0]; // Convert to yyyy-MM-dd
+      const body = {
+        unit_id: unitID,
+        inspection_date: formattedDate,
+      };
+
+      // Debug: log the body object to verify its structure
+      console.log('Request body:', body);
+
+      const data = await dataPost(endpoint, 'POST', body, token);
+      console.log('Data posted successfully:', data);
+      await fetchInspectionData();
+      close();
+    } catch (error) {
+      console.error('Failed to post data:', error);
+      setError(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleView = (data) => {
-    setSelectedData(data);
+    const unitName = getUnitNameById(data.unit_id);
+    setSelectedData({
+      ...data,
+      unit: unitName,
+      date: data.inspection_date,
+      statusColor: data.status === 'Completed' ? 'green' : 'blue',
+      setComments: (comments) => {
+        setSelectedData((prevData) => ({
+          ...prevData,
+          comments,
+        }));
+      },
+    });
     openView();
   };
 
@@ -131,34 +160,62 @@ export function Inspection() {
     closeAssign();
   };
 
-  const rows = elements.map((element) => (
+  const fetchInspectionData = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('jwt');
+      const endpoint = 'api/inspections/';
+      const data = await fetchData(endpoint, 'GET', null, token);
+      // Ensure data is an array
+      if (Array.isArray(data)) {
+        setInspectionData(data);
+      } else {
+        console.error('Unexpected response format:', data);
+        setInspectionData([]);
+      }
+      console.log(data);
+    } catch (error) {
+      console.error('Failed to fetch projects:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchUnitsData = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('jwt');
+      const endpoint = 'api/units/';
+      const data = await fetchData(endpoint, 'GET', null, token);
+      setUnitsData(data);
+    } catch (error) {
+      console.error('Failed to fetch units:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchInspectionData();
+    fetchUnitsData();
+  }, []);
+
+  const getUnitNameById = (id) => {
+    const unit = unitsData.find((unit) => unit.unit_id === id);
+    return unit ? unit.unit_name : 'Unknown';
+  };
+
+  const rows = inspectionData.map((element) => (
     <Table.Tr key={element.name}>
-      <Table.Td>{element.position}</Table.Td>
-      <Table.Td>{element.symbol}</Table.Td>
+      <Table.Td>{getUnitNameById(element.unit_id)}</Table.Td>
+      <Table.Td>{element.inspection_date}</Table.Td>
       <Table.Td><Button className={styles.button} onClick={openAssign}>Assign to</Button></Table.Td>
       <Table.Td>{element.status}</Table.Td>
       <Table.Td>
-        <Group >
+        <Group>
           <IconEye
             size={20}
-            onClick={() =>
-              handleView({
-                unit: element.name,
-                date: 'DD/MM/YYYY',
-                status: 'Started',
-                statusColor: 'blue',
-                completedDate: 'DD/MM/YYYY',
-                inspectionDetails: 'Details of the inspection...',
-                comments: '',
-                setComments: (comments) => {
-                  setSelectedData((prevData) => ({
-                    ...prevData,
-                    comments,
-                  }));
-                },
-                inspectedBy: 'Person Details',
-              })
-            }
+            onClick={() => handleView(element)}
             style={{ cursor: 'pointer' }}
           />
           <IconEdit
@@ -209,23 +266,28 @@ export function Inspection() {
               <Select
                 label="Unit"
                 placeholder="Select Unit"
-                data={['Unit 1', 'Unit 2', 'Unit 3']} // Replace with your units
-                value={ResourceName}
-                onChange={setResourceName}
+                data={unitsData.map((unit) => ({
+                  value: unit.unit_id.toString(), // Ensure value is a string
+                  label: unit.unit_name,
+                }))}
+                value={unitID}
+                onChange={setUnitID}
                 mb="sm"
               />
               <TextInput
                 label="Inspection Date"
                 type="date"
                 placeholder="Pick a date"
-                value={DateValue}
-                onChange={setDateValue}
+                value={
+                  idate instanceof Date && !isNaN(idate) ? idate.toISOString().split('T')[0] : ''
+                }
+                onChange={(event) => setIdate(new Date(event.currentTarget.value))} // Update state with new Date object
                 mb="sm"
               />
             </div>
 
             <div className={styles.buttonContainer}>
-              <Button className={styles.addButtonModal} onClick={handleAdd}>
+              <Button className={styles.addButtonModal} onClick={handleSubmit}>
                 Add
               </Button>
             </div>
@@ -235,7 +297,7 @@ export function Inspection() {
             Add Inspection
           </button>
         </div>
-        <Table stickyHeader stickyHeaderOffset={60} >
+        <Table stickyHeader stickyHeaderOffset={60}>
           <Table.Thead>
             <Table.Tr>
               <Table.Th>Unit</Table.Th>
