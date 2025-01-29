@@ -19,7 +19,7 @@ import styles from './HomePage.module.css';
 import classes from './TableScrollArea.module.css';
 import { Link } from 'react-router-dom';
 import { IconEdit, IconEye, IconTrash } from '@tabler/icons-react';
-import { dataPost, fetchData } from './utils/crud';
+import { dataPost, deleteData, fetchData } from './utils/crud';
 
 const items = [
   { title: 'HomePage', href: '/homepage' },
@@ -33,14 +33,31 @@ const items = [
 const ViewModal = ({ opened, onClose, data }) => (
   <Modal opened={opened} onClose={onClose} centered>
     <div style={{ padding: '20px' }}>
-      <div><strong>Unit:</strong> {data.unit}</div>
-      <div><strong>Date:</strong> {data.date}</div>
-      <div><strong>Status:</strong> <span style={{ color: data.statusColor }}>{data.status}</span></div>
-      <div><strong>Inspection Details:</strong> {data.inspectionDetails}</div>
-      <div><strong>Comments:</strong></div>
-      <Textarea value={data.comments} onChange={(event) => data.setComments(event.currentTarget.value)} />
-      <div><strong>Completed date:</strong> {data.completedDate}</div>
-      <div><strong>Inspected By:</strong> {data.inspectedBy}</div>
+      <div>
+        <strong>Unit:</strong> {data.unit}
+      </div>
+      <div>
+        <strong>Date:</strong> {data.date}
+      </div>
+      <div>
+        <strong>Status:</strong> <span style={{ color: data.statusColor }}>{data.status}</span>
+      </div>
+      <div>
+        <strong>Inspection Details:</strong> {data.inspectionDetails}
+      </div>
+      <div>
+        <strong>Comments:</strong>
+      </div>
+      <Textarea
+        value={data.comments}
+        onChange={(event) => data.setComments(event.currentTarget.value)}
+      />
+      <div>
+        <strong>Completed date:</strong> {data.completedDate}
+      </div>
+      <div>
+        <strong>Inspected By:</strong> {data.inspectedBy}
+      </div>
       <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
         <Button>Generate Report</Button>
       </div>
@@ -51,20 +68,20 @@ const ViewModal = ({ opened, onClose, data }) => (
 const AssignModal = ({ opened, onClose, data, onAssign }) => (
   <Modal opened={opened} onClose={onClose} centered>
     <div style={{ padding: '20px' }}>
-      <h3>Unit Wise Workers List</h3>
+      <h3>Staff List</h3>
       <Table>
         <Table.Thead>
           <Table.Tr>
             <Table.Th>Name</Table.Th>
-            <Table.Th>Department</Table.Th>
+            <Table.Th>Role</Table.Th>
             <Table.Th>Select</Table.Th>
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
           {data.map((worker, index) => (
             <Table.Tr key={index}>
-              <Table.Td>{worker.name}</Table.Td>
-              <Table.Td>{worker.department}</Table.Td>
+              <Table.Td>{worker.staff_name}</Table.Td>
+              <Table.Td>{worker.role}</Table.Td>
               <Table.Td>
                 <Checkbox />
               </Table.Td>
@@ -121,6 +138,8 @@ export function Inspection() {
       const data = await dataPost(endpoint, 'POST', body, token);
       console.log('Data posted successfully:', data);
       await fetchInspectionData();
+      setUnitID('');
+      setIdate('');
       close();
     } catch (error) {
       console.error('Failed to post data:', error);
@@ -152,7 +171,16 @@ export function Inspection() {
   };
 
   const handleDelete = (id) => {
-    console.log('Delete', id);
+    const token = localStorage.getItem('jwt');
+    const endpoint = 'api/inspections'; // Replace with your actual endpoint
+    deleteData(endpoint, id, token)
+      .then(() => {
+        alert('Data deleted successfully');
+        fetchInspectionData(); // Refetch the data to update the table
+      })
+      .catch((error) => {
+        console.error('Failed to delete data:', error);
+      });
   };
 
   const handleAssign = () => {
@@ -195,9 +223,24 @@ export function Inspection() {
     }
   };
 
+  const fetchUsersData = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('jwt');
+      const endpoint = 'users/';
+      const data = await fetchData(endpoint, 'GET', null, token);
+      setWorkersData(data);
+    } catch (error) {
+      console.error('Failed to fetch users:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchInspectionData();
     fetchUnitsData();
+    fetchUsersData();
   }, []);
 
   const getUnitNameById = (id) => {
@@ -209,15 +252,15 @@ export function Inspection() {
     <Table.Tr key={element.name}>
       <Table.Td>{getUnitNameById(element.unit_id)}</Table.Td>
       <Table.Td>{element.inspection_date}</Table.Td>
-      <Table.Td><Button className={styles.button} onClick={openAssign}>Assign to</Button></Table.Td>
-      <Table.Td>{element.status}</Table.Td>
+      <Table.Td>
+        <Button className={styles.button} onClick={openAssign}>
+          Assign to
+        </Button>
+      </Table.Td>
+      {/* <Table.Td>{element.status}</Table.Td> */}
       <Table.Td>
         <Group>
-          <IconEye
-            size={20}
-            onClick={() => handleView(element)}
-            style={{ cursor: 'pointer' }}
-          />
+          <IconEye size={20} onClick={() => handleView(element)} style={{ cursor: 'pointer' }} />
           <IconEdit
             size={20}
             onClick={() => handleEdit(element.name)}
@@ -225,7 +268,7 @@ export function Inspection() {
           />
           <IconTrash
             size={20}
-            onClick={() => handleDelete(element.name)}
+            onClick={() => handleDelete(element.inspection_id)}
             style={{ cursor: 'pointer' }}
           />
         </Group>
@@ -236,7 +279,7 @@ export function Inspection() {
   return (
     <AppShell
       header={{ height: 60 }}
-      navbar={{ width: 300, breakpoint: 'sm', collapsed: { mobile: !opened } }}
+      navbar={{ width: 275, breakpoint: 'sm', collapsed: { mobile: !opened } }}
       padding="md"
     >
       <AppShell.Header>
@@ -245,7 +288,7 @@ export function Inspection() {
           <Header />
         </Group>
       </AppShell.Header>
-      <AppShell.Navbar>
+      <AppShell.Navbar p={'sm'}>
         <Navbar />
       </AppShell.Navbar>
       <AppShell.Main>
@@ -303,7 +346,7 @@ export function Inspection() {
               <Table.Th>Unit</Table.Th>
               <Table.Th>Date</Table.Th>
               <Table.Th>Assigned To</Table.Th>
-              <Table.Th>Status</Table.Th>
+              {/* <Table.Th>Status</Table.Th> */}
               <Table.Th>Actions</Table.Th>
             </Table.Tr>
           </Table.Thead>
@@ -312,7 +355,12 @@ export function Inspection() {
         </Table>
       </AppShell.Main>
       <ViewModal opened={viewModalOpened} onClose={closeView} data={selectedData} />
-      <AssignModal opened={assignModalOpened} onClose={closeAssign} data={workersData} onAssign={handleAssign} />
+      <AssignModal
+        opened={assignModalOpened}
+        onClose={closeAssign}
+        data={workersData}
+        onAssign={handleAssign}
+      />
     </AppShell>
   );
 }

@@ -17,7 +17,7 @@ import styles from './HomePage.module.css';
 import classes from './TableScrollArea.module.css';
 import { Link } from 'react-router-dom';
 import { IconEdit, IconEye, IconTrash } from '@tabler/icons-react';
-import { dataPost, fetchData } from './utils/crud';
+import { dataPost, deleteData, fetchData} from './utils/crud';
 
 const items = [
   { title: 'HomePage', href: '/homepage' },
@@ -75,6 +75,10 @@ export function PowerPlant() {
       const data = await dataPost(endpoint, 'POST', body, token);
       console.log('Data posted successfully:', data);
       await fetchPowerPlantData();
+      setPlantName('');
+      setLocation('');
+      setCapacity('');
+      setEnergyType('');
       close();
     } catch (error) {
       console.error('Failed to post data:', error);
@@ -94,7 +98,16 @@ export function PowerPlant() {
   };
 
   const handleDelete = (id) => {
-    console.log('Delete', id);
+    const token = localStorage.getItem('jwt');
+    const endpoint = 'api/powerplants'; // Replace with your actual endpoint
+    deleteData(endpoint, id, token)
+      .then(() => {
+        alert('Data deleted successfully');
+        fetchPowerPlantData(); // Refetch the data to update the table
+      })
+      .catch((error) => {
+        console.error('Failed to delete data:', error);
+      });
   };
 
   const fetchPowerPlantData = async () => {
@@ -117,7 +130,7 @@ export function PowerPlant() {
   }, []);
 
   const rows = powerplantData.map((element) => (
-    <Table.Tr key={element.name}>
+    <Table.Tr key={element.id}>
       <Table.Td>{element.name}</Table.Td>
       <Table.Td>{element.location}</Table.Td>
       <Table.Td>{element.capacity}</Table.Td>
@@ -126,17 +139,17 @@ export function PowerPlant() {
         <Group spacing="xs">
           <IconEye
             size={20}
-            onClick={() => handleView(element.name)}
+            onClick={() => handleView(element)}
             style={{ cursor: 'pointer' }}
           />
           <IconEdit
             size={20}
-            onClick={() => handleEdit(element.name)}
+            onClick={() => handleEdit(element.id)}
             style={{ cursor: 'pointer' }}
           />
           <IconTrash
             size={20}
-            onClick={() => handleDelete(element.name)}
+            onClick={() => handleDelete(element.plant_id)}
             style={{ cursor: 'pointer' }}
           />
         </Group>
@@ -147,7 +160,7 @@ export function PowerPlant() {
   return (
     <AppShell
       header={{ height: 60 }}
-      navbar={{ width: 300, breakpoint: 'sm', collapsed: { mobile: !opened } }}
+      navbar={{ width: 275, breakpoint: 'sm', collapsed: { mobile: !opened } }}
       padding="md"
     >
       <AppShell.Header>
@@ -156,7 +169,7 @@ export function PowerPlant() {
           <Header />
         </Group>
       </AppShell.Header>
-      <AppShell.Navbar>
+      <AppShell.Navbar p={"sm"}>
         <Navbar />
       </AppShell.Navbar>
       <AppShell.Main>

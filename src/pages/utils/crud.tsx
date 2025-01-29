@@ -57,5 +57,35 @@ export const fetchData = async (endpoint: any, method = 'GET', body = null, bear
       throw error; // Re-throw the error to be handled by the caller
     }
   };
+
+  
+  export const deleteData = async (endpoint, id, bearerToken) => {
+    const baseApi = import.meta.env.VITE_BACKEND;
+    const url = `${baseApi}${endpoint}/${id}/`;
+  
+    const headers = {
+      'Content-Type': 'application/json',
+    };
+  
+    if (bearerToken) {
+      headers.Authorization = `Bearer ${bearerToken}`;
+    }
+  
+    try {
+      const response = await fetch(url, {
+        method: 'DELETE',
+        headers,
+      });
+  
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status} - ${response}`);
+      }
+  
+      return 'Data deleted successfully';
+    } catch (error) {
+      console.error('An error occurred while deleting data:', error);
+      throw error; // Re-throw the error to be handled by the caller
+    }
+  };
   
   

@@ -142,15 +142,15 @@ const AdminTab = () => {
 export function Login() {
   return (
     <Grid className={classes.grid}>
-      <Grid.Col span={6} visibleFrom="md">
+      {/* <Grid.Col span={6} visibleFrom="md">
         <Image
           radius="md"
           height="100%"
           src="https://rymec.edu.in/wp-content/uploads/2023/03/baim5.png"
         />
-      </Grid.Col>
+      </Grid.Col> */}
 
-      <Grid.Col span={6} className={classes.col}>
+      {/* <Grid.Col span={6} className={classes.col}> */}
         <Tabs variant="outline" radius="lg" defaultValue="gallery" className={classes.tabs}>
           <Tabs.List className={classes.tabslist}>
             <Tabs.Tab value="gallery" className={classes.tab}>
@@ -169,7 +169,7 @@ export function Login() {
             <SignUpForm />
           </Tabs.Panel>
         </Tabs>
-      </Grid.Col>
+      {/* </Grid.Col> */}
     </Grid>
   );
 }

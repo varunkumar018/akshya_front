@@ -17,7 +17,7 @@ import styles from './HomePage.module.css';
 import classes from './TableScrollArea.module.css';
 import { Link } from 'react-router-dom';
 import { IconEdit, IconEye, IconTrash } from '@tabler/icons-react';
-import { dataPost, fetchData } from './utils/crud';
+import { dataPost, deleteData, fetchData } from './utils/crud';
 
 const items = [
   { title: 'HomePage', href: '/homepage' },
@@ -62,6 +62,11 @@ export function Resource() {
       const data = await dataPost(endpoint, 'POST', body, token);
       console.log('Data posted successfully:', data);
       await fetchResourceData();
+      // Reset the input fields
+      setResourceName('');
+      setType('');
+      setQuantity('');
+      setUnitID('');
       close();
     } catch (error) {
       console.error('Failed to post data:', error);
@@ -69,19 +74,6 @@ export function Resource() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleView = (data) => {
-    setSelectedData(data);
-    openView();
-  };
-
-  const handleEdit = (id) => {
-    console.log('Edit', id);
-  };
-
-  const handleDelete = (id) => {
-    console.log('Delete', id);
   };
 
   const fetchResourceData = async () => {
@@ -124,6 +116,28 @@ export function Resource() {
     fetchUnitsData();
   }, []);
 
+  const handleView = (data) => {
+    setSelectedData(data);
+    openView();
+  };
+
+  const handleEdit = (id) => {
+    console.log('Edit', id);
+  };
+
+  const handleDelete = (id) => {
+    const token = localStorage.getItem('jwt');
+    const endpoint = 'api/resources'; // Replace with your actual endpoint
+    deleteData(endpoint, id, token)
+      .then(() => {
+        alert('Data deleted successfully');
+        fetchResourceData(); // Refetch the data to update the table
+      })
+      .catch((error) => {
+        console.error('Failed to delete data:', error);
+      });
+  };
+
   const rows = Array.isArray(resourceData)
     ? resourceData.map((element) => (
         <Table.Tr key={element.name}>
@@ -144,7 +158,7 @@ export function Resource() {
               />
               <IconTrash
                 size={20}
-                onClick={() => handleDelete(element.name)}
+                onClick={() => handleDelete(element.id)}
                 style={{ cursor: 'pointer' }}
               />
             </Group>
@@ -156,7 +170,7 @@ export function Resource() {
   return (
     <AppShell
       header={{ height: 60 }}
-      navbar={{ width: 300, breakpoint: 'sm', collapsed: { mobile: !opened } }}
+      navbar={{ width: 275, breakpoint: 'sm', collapsed: { mobile: !opened } }}
       padding="md"
     >
       <AppShell.Header>
@@ -165,7 +179,7 @@ export function Resource() {
           <Header />
         </Group>
       </AppShell.Header>
-      <AppShell.Navbar>
+      <AppShell.Navbar p={"sm"}>
         <Navbar />
       </AppShell.Navbar>
       <AppShell.Main>
@@ -186,12 +200,7 @@ export function Resource() {
               <Select
                 label="Resource Name"
                 placeholder="Select Resource name"
-                data={[
-                  { value: 'Resource 1', label: 'Resource 1' },
-                  { value: 'Resource 2', label: 'Resource 2' },
-                  { value: 'Resource 3', label: 'Resource 3' },
-                  // Add more plant options here
-                ]}
+                data={['Solar Panels', 'Wind Turbines', 'Hydro Turbines','Geothermal Systems','Batteries']}
                 value={resourceName}
                 onChange={setResourceName}
                 mb="sm"
@@ -199,7 +208,7 @@ export function Resource() {
               <Select
                 label="Type"
                 placeholder="Select Type"
-                data={['Type A', 'Type B', 'Type C']} // Replace with your types
+                data={['Energy', 'Storage', 'Operational','Environmental','Technological']} // Replace with your types
                 value={type}
                 onChange={setType}
                 mb="sm"

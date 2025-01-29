@@ -19,7 +19,7 @@ export function Settings() {
   return (
     <AppShell
       header={{ height: 60 }}
-      navbar={{ width: 300, breakpoint: 'sm', collapsed: { mobile: !opened } }}
+      navbar={{ width: 275, breakpoint: 'sm', collapsed: { mobile: !opened } }}
       padding="md"
     >
       <AppShell.Header>
@@ -28,62 +28,32 @@ export function Settings() {
           <Header />
         </Group>
       </AppShell.Header>
-      <AppShell.Navbar>
+      <AppShell.Navbar p={'sm'}>
         <Navbar />
       </AppShell.Navbar>
       <AppShell.Main>
         <Breadcrumbs ml={15}>{items}</Breadcrumbs>
         <h2>Settings</h2>
-        <Grid w="80rem">
-          <Grid.Col span={4} pl="20px">
-            <Link to="/powerplant" style={{ textDecoration: 'none' }}>
-              <Card
-                shadow="sm"
-                w="280px"
-                padding="xl"
-                h="100px"
-                radius="md"
-                mt="30px"
-                ml="80px"
-                mr="900px"
-                withBorder
-              >
-                <Text>Power Plant</Text>
+        <Grid justify="space-around" mt={"50px"}  >
+          <Grid.Col span={3.5} >
+            <Link to="/powerplant" style={{ textDecoration: 'none'}}>
+              <Card shadow="sm" ta={"center"} h={"100%"} padding="xl"  radius="md"  withBorder>
+                Power Plant
               </Card>
             </Link>
           </Grid.Col>
 
-          <Grid.Col span={4} pl="20px">
+          <Grid.Col span={3.5}>
             <Link to="/units" style={{ textDecoration: 'none' }}>
-              <Card
-                shadow="sm"
-                w="280px"
-                padding="xl"
-                h="100px"
-                radius="md"
-                mt="30px"
-                ml="30px"
-                mr="900px"
-                withBorder
-              >
+              <Card shadow="sm" ta={"center"} h={"100%"} padding="xl" radius="md"  withBorder>
                 <Text>Units</Text>
               </Card>
             </Link>
           </Grid.Col>
 
-          <Grid.Col span={4}>
+          <Grid.Col span={3.5}>
             <Link to="/staff" style={{ textDecoration: 'none' }}>
-              <Card
-                shadow="sm"
-                w="280px"
-                padding="xl"
-                h="100px"
-                radius="md"
-                mt="30px"
-                ml="15px"
-                mr="900px"
-                withBorder
-              >
+              <Card shadow="sm"  padding="xl" ta={"center"} h={"100%"}  radius="md"  withBorder>
                 <Text>Staff</Text>
               </Card>
             </Link>

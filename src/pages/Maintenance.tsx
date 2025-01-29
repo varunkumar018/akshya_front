@@ -18,7 +18,7 @@ import styles from './HomePage.module.css';
 import classes from './TableScrollArea.module.css';
 import { Link } from 'react-router-dom';
 import { IconEdit, IconEye, IconTrash } from '@tabler/icons-react';
-import { dataPost, fetchData } from './utils/crud';
+import { dataPost, deleteData, fetchData } from './utils/crud';
 
 const items = [
   { title: 'HomePage', href: '/homepage' },
@@ -63,50 +63,35 @@ const ViewModal = ({ opened, onClose, data }) => (
   </Modal>
 );
 
-const AssignModal = ({ opened, onClose, unitId, unitsData, workersData, onAssign }) => {
-  return(
-    <Modal opened={opened} onClose={onClose} centered>
-      <div style={{ padding: '20px' }}>
-        <h3>Unit Wise Workers List</h3>
-        <Select
-          label="Unit"
-          placeholder="Select Unit"
-          data={unitsData.map((unit) => ({
-            value: unit.unit_id.toString(), // Ensure value is a string
-            label: unit.unit_name,
-          }))}
-          value={unitID}
-          onChange={setUnitID}
-          mb="sm"
-        />
-        <Table>
-          <Table.Thead>
-            <Table.Tr>
-              <Table.Th>Name</Table.Th>
-              <Table.Th>Select</Table.Th>
+const AssignModal = ({ opened, onClose, data, onAssign }) => (
+  <Modal opened={opened} onClose={onClose} centered>
+    <div style={{ padding: '20px' }}>
+      <h3>Staff List</h3>
+      <Table>
+        <Table.Thead>
+          <Table.Tr>
+            <Table.Th>Name</Table.Th>
+            <Table.Th>Role</Table.Th>
+            <Table.Th>Select</Table.Th>
+          </Table.Tr>
+        </Table.Thead>
+        <Table.Tbody>
+          {data.map((worker, index) => (
+            <Table.Tr key={index}>
+              <Table.Td>{worker.staff_name}</Table.Td>
+              <Table.Td>{worker.role}</Table.Td>
+              <Table.Td>
+                <Checkbox />
+              </Table.Td>
             </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>
-            {workersData.map((worker, index) => (
-              <Table.Tr key={index}>
-                <Table.Td>{worker.staff_name}</Table.Td>
-                <Table.Td>
-                  <Checkbox />
-                </Table.Td>
-              </Table.Tr>
-            ))}
-          </Table.Tbody>
-        </Table>
-        <Button
-          onClick={onAssign}
-          style={{ display: 'block', margin: '20px auto', backgroundColor: 'black' }}
-        >
-          Assign
-        </Button>
-      </div>
-    </Modal>
-  );
-};
+          ))}
+        </Table.Tbody>
+      </Table>
+      <Button onClick={onAssign} style={{ display: 'block', margin: '20px auto', backgroundColor: 'black' }}>Assign</Button>
+    </div>
+  </Modal>
+);
+
 
 export function Maintenance() {
   const [opened, { toggle }] = useDisclosure();
@@ -145,6 +130,9 @@ export function Maintenance() {
       const data = await dataPost(endpoint, 'POST', body, token);
       console.log('Data posted successfully:', data);
       await fetchMaintenanceData();
+      setUnitID('');
+      setType('');
+      setSpecification('');
       close();
     } catch (error) {
       console.error('Failed to post data:', error);
@@ -175,7 +163,16 @@ export function Maintenance() {
   };
 
   const handleDelete = (id) => {
-    console.log('Delete', id);
+    const token = localStorage.getItem('jwt');
+    const endpoint = 'api/maintenance'; // Replace with your actual endpoint
+    deleteData(endpoint, id, token)
+      .then(() => {
+        alert('Data deleted successfully');
+        fetchMaintenanceData(); // Refetch the data to update the table
+      })
+      .catch((error) => {
+        console.error('Failed to delete data:', error);
+      });
   };
 
   const handleAssign = () => {
@@ -211,7 +208,7 @@ export function Maintenance() {
       const data = await fetchData(endpoint, 'GET', null, token);
       setWorkersData(data);
     } catch (error) {
-      console.error('Failed to fetch units:', error);
+      console.error('Failed to fetch users:', error);
     } finally {
       setLoading(false);
     }
@@ -233,7 +230,8 @@ export function Maintenance() {
 
   useEffect(() => {
     fetchMaintenanceData();
-    // fetchUnitsData();
+    fetchUnitsData();
+    fetchUsersData(); // Fetch user data when the component mounts
   }, []);
 
   const getUnitNameById = (id) => {
@@ -251,7 +249,6 @@ export function Maintenance() {
           Assign to
         </Button>
       </Table.Td>
-      <Table.Td>{element.status}</Table.Td>
       <Table.Td>
         <Group>
           <IconEye size={20} onClick={() => handleView(element)} style={{ cursor: 'pointer' }} />
@@ -262,7 +259,7 @@ export function Maintenance() {
           />
           <IconTrash
             size={20}
-            onClick={() => handleDelete(element.name)}
+            onClick={() => handleDelete(element.record_id)}
             style={{ cursor: 'pointer' }}
           />
         </Group>
@@ -314,7 +311,7 @@ export function Maintenance() {
               <Select
                 label="Type"
                 placeholder="Select Type"
-                data={['Type A', 'Type B', 'Type C'].map((type) => ({ value: type, label: type }))}
+                data={['Preventive', 'Corrective', 'Condition-based','Predictive','Scheduled','Emergency','Proactive','Deferred'].map((type) => ({ value: type, label: type }))}
                 value={type}
                 onChange={setType}
                 mb="sm"
@@ -356,7 +353,6 @@ export function Maintenance() {
               <Table.Th>Type</Table.Th>
               <Table.Th>Date</Table.Th>
               <Table.Th>Assigned To</Table.Th>
-              <Table.Th>Status</Table.Th>
               <Table.Th>Actions</Table.Th>
             </Table.Tr>
           </Table.Thead>

@@ -16,7 +16,8 @@ import { useEffect, useState } from 'react';
 import styles from './HomePage.module.css';
 import classes from './TableScrollArea.module.css';
 import { Link } from 'react-router-dom';
-import { dataPost, fetchData } from './utils/crud';
+import { dataPost, deleteData, fetchData } from './utils/crud';
+import { IconEdit, IconEye, IconTrash } from '@tabler/icons-react';
 
 const items = [
   { title: 'HomePage', href: '/homepage' },
@@ -67,6 +68,8 @@ export function Units() {
 
       const data = await dataPost(endpoint, 'POST', body, token);
       await fetchUnitsData();
+      setUnitName('');
+      setPlantName('');
       close();
     } catch (error) {
       setError(error);
@@ -94,8 +97,31 @@ export function Units() {
     fetchUnitsData();
   }, []);
 
+  const handleView = (data) => {
+    setSelectedData(data);
+    openView();
+  };
+
+  const handleEdit = (id) => {
+    console.log('Edit', id);
+  };
+
+  const handleDelete = (id) => {
+    const token = localStorage.getItem('jwt');
+    const endpoint = 'api/units'; // Replace with your actual endpoint
+    deleteData(endpoint, id, token)
+      .then(() => {
+        alert('Data deleted successfully');
+        fetchUnitsData(); // Refetch the data to update the table
+      })
+      .catch((error) => {
+        console.error('Failed to delete data:', error);
+      });
+  };
+
   const getPlantNameById = (id) => {
     const plant = powerplantData.find((plant) => plant.plant_id === id);
+    console.log('Plant ID:', id, 'Found Plant:', plant); // Debug log
     return plant ? plant.name : 'Unknown';
   };
 
@@ -103,13 +129,32 @@ export function Units() {
     <Table.Tr key={element.unit_name}>
       <Table.Td>{element.unit_name}</Table.Td>
       <Table.Td>{getPlantNameById(element.power_plant)}</Table.Td>
+      <Table.Td>
+        <Group spacing="xs">
+          <IconEye
+            size={20}
+            onClick={() => handleView(element)}
+            style={{ cursor: 'pointer' }}
+          />
+          <IconEdit
+            size={20}
+            onClick={() => handleEdit(element.id)}
+            style={{ cursor: 'pointer' }}
+          />
+          <IconTrash
+            size={20}
+            onClick={() => handleDelete(element.unit_id)}
+            style={{ cursor: 'pointer' }}
+          />
+        </Group>
+      </Table.Td>
     </Table.Tr>
   ));
 
   return (
     <AppShell
       header={{ height: 60 }}
-      navbar={{ width: 300, breakpoint: 'sm', collapsed: { mobile: !opened } }}
+      navbar={{ width: 275, breakpoint: 'sm', collapsed: { mobile: !opened } }}
       padding="md"
     >
       <AppShell.Header>
@@ -118,7 +163,7 @@ export function Units() {
           <Header />
         </Group>
       </AppShell.Header>
-      <AppShell.Navbar>
+      <AppShell.Navbar p={"sm"}>
         <Navbar />
       </AppShell.Navbar>
       <AppShell.Main>
@@ -171,9 +216,9 @@ export function Units() {
             <Table.Tr>
               <Table.Th>Unit Name</Table.Th>
               <Table.Th>Plant Name</Table.Th>
-              <Table.Th>Status</Table.Th>
-              <Table.Th>Last Maintenance</Table.Th>
-              <Table.Th>Next Inspection</Table.Th>
+              {/* <Table.Th>Status</Table.Th>
+              <Table.Th>Last Maintenance</Table.Th> */}
+              <Table.Th>Actions</Table.Th>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>{rows}</Table.Tbody>
@@ -182,4 +227,12 @@ export function Units() {
       </AppShell.Main>
     </AppShell>
   );
+}
+
+function openView() {
+  throw new Error('Function not implemented.');
+}
+
+function setSelectedData(data: any) {
+  throw new Error('Function not implemented.');
 }

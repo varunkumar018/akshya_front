@@ -32,7 +32,7 @@ export function Header() {
 
   return (
     <div className={classes.header}>
-      <Title order={4} size={32} ml={20}>AKSHYA</Title>
+      <Title order={4} size={32} ml={20}>AKSHAYA</Title>
       <div className={classes.profile}>
         <Group>
           <Popover
@@ -72,7 +72,7 @@ export function Header() {
               </Group>
             </Popover.Dropdown>
           </Popover>
-          {userData && <Text>{userData.username}</Text>}
+          {userData && <Text>{userData.staff_name}</Text>}
         </Group>
       </div>
     </div>

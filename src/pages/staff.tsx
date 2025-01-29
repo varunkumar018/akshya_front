@@ -18,7 +18,7 @@ import { useEffect, useState } from 'react';
 import styles from './HomePage.module.css';
 import { Link } from 'react-router-dom';
 import { IconEdit, IconEye, IconTrash } from '@tabler/icons-react';
-import { dataPost, fetchData } from './utils/crud';
+import { dataPost, deleteData, fetchData } from './utils/crud';
 
 const items = [
   { title: 'HomePage', href: '/homepage' },
@@ -33,6 +33,8 @@ const items = [
 export function Staff() {
   const [opened, { toggle }] = useDisclosure();
   const [modalOpened, { open, close }] = useDisclosure(false);
+  const [assignModalOpened, { open: openAssign, close: closeAssign }] = useDisclosure(false);
+
 
   const [staffName, setStaffName] = useState('');
   const [role, setRole] = useState('');
@@ -57,7 +59,7 @@ export function Staff() {
       const body = {
         username: username,
         email: email,
-        password: password,
+        password: username,
         staff_name: staffName,
         role: role,
         staff_mob: contact,
@@ -133,6 +135,32 @@ export function Staff() {
     fetchPowerPlantData();
   }, []);
 
+  const handleView = (id) => {
+    console.log('Edit', id);
+  };
+
+  const handleEdit = (id) => {
+    console.log('Edit', id);
+  };
+
+  const handleDelete = (id) => {
+    const token = localStorage.getItem('jwt');
+    const endpoint = 'users'; // Replace with your actual endpoint
+    deleteData(endpoint, id, token)
+      .then(() => {
+        alert('Data deleted successfully');
+        fetchStaffData(); // Refetch the data to update the table
+      })
+      .catch((error) => {
+        console.error('Failed to delete data:', error);
+      });
+  };
+
+  const handleAssign = () => {
+    console.log('Assigned workers');
+    closeAssign();
+  };
+
   const getUnitNameById = (id) => {
     const unit = unitsData.find((unit) => unit.unit_id === id);
     return unit ? unit.unit_name : 'Unknown';
@@ -163,7 +191,7 @@ export function Staff() {
           />
           <IconTrash
             size={20}
-            onClick={() => handleDelete(element.name)}
+            onClick={() => handleDelete(element.id)}
             style={{ cursor: 'pointer' }}
           />
         </Group>
@@ -174,7 +202,7 @@ export function Staff() {
   return (
     <AppShell
       header={{ height: 60 }}
-      navbar={{ width: 300, breakpoint: 'sm', collapsed: { mobile: !opened } }}
+      navbar={{ width: 275, breakpoint: 'sm', collapsed: { mobile: !opened } }}
       padding="md"
     >
       <AppShell.Header>
@@ -183,7 +211,7 @@ export function Staff() {
           <Header />
         </Group>
       </AppShell.Header>
-      <AppShell.Navbar>
+      <AppShell.Navbar p={"sm"}>
         <Navbar />
       </AppShell.Navbar>
       <AppShell.Main>
@@ -208,13 +236,13 @@ export function Staff() {
                 onChange={(event) => setUsername(event.currentTarget.value)}
                 mb="sm"
               />
-              <PasswordInput
+              {/* <PasswordInput
                 label="Password"
                 placeholder="Enter password"
                 value={password}
-                onChange={(event) => set(event.currentTarget.value)}
+                onChange={(event) => setPassword(event.currentTarget.value)}
                 mb="sm"
-              />
+              /> */}
               <TextInput
                 label="Email"
                 placeholder="Enter email"

@@ -9,9 +9,11 @@ export function HomePage() {
   const [opened, { toggle }] = useDisclosure();
 
   const data = [
-    { date: '2023-01-01', Apples: 10, Oranges: 5, Tomatoes: 8 },
-    { date: '2023-01-02', Apples: 15, Oranges: 7, Tomatoes: 12 },
-    { date: '2023-01-03', Apples: 7, Oranges: 10, Tomatoes: 5 },
+    { date: '2023-01-01', Solar: 100, Wind: 80, Hydro: 50, Geothermal: 30, Biomass: 20 },
+    { date: '2023-01-02', Solar: 120, Wind: 90, Hydro: 70, Geothermal: 40, Biomass: 25 },
+    { date: '2023-01-03', Solar: 90, Wind: 110, Hydro: 60, Geothermal: 35, Biomass: 30 },
+    { date: '2023-01-04', Solar: 150, Wind: 130, Hydro: 80, Geothermal: 50, Biomass: 40 },
+    { date: '2023-01-05', Solar: 130, Wind: 120, Hydro: 90, Geothermal: 45, Biomass: 35 },
     // Add more data points as needed
   ];
 
@@ -39,7 +41,7 @@ export function HomePage() {
   return (
     <AppShell
       header={{ height: 60 }}
-      navbar={{ width: 300, breakpoint: 'sm', collapsed: { mobile: !opened } }}
+      navbar={{ width: 275, breakpoint: 'sm', collapsed: { mobile: !opened } }}
       padding="md"
     >
       <AppShell.Header>
@@ -48,20 +50,22 @@ export function HomePage() {
           <Header />
         </Group>
       </AppShell.Header>
-      <AppShell.Navbar>
+      <AppShell.Navbar p={'sm'}>
         <Navbar />
       </AppShell.Navbar>
       <AppShell.Main>
-        <h2>Area Chart</h2>
+        <h2>Analysis</h2>
         <AreaChart
           h={550}
           w={1150}
           data={data}
           dataKey="date"
           series={[
-            { name: 'Apples', color: 'indigo.6', dataKey: 'Apples' },
-            { name: 'Oranges', color: 'blue.6', dataKey: 'Oranges' },
-            { name: 'Tomatoes', color: 'teal.6', dataKey: 'Tomatoes' },
+            { name: 'Solar', color: 'yellow.6', dataKey: 'Solar' },
+            { name: 'Wind', color: 'blue.6', dataKey: 'Wind' },
+            { name: 'Hydro', color: 'green.6', dataKey: 'Hydro' },
+            { name: 'Geothermal', color: 'orange.6', dataKey: 'Geothermal' },
+            { name: 'Biomass', color: 'brown.6', dataKey: 'Biomass' },
           ]}
           curveType="linear"
         />
